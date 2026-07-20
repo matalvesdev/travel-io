@@ -1,0 +1,58 @@
+import { NextRequest } from 'next/server';
+import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+
+export async function GET(request: NextRequest) {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+    const category = searchParams.get('category');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    let query = supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('transaction_date', { ascending: false });
+
+    if (type) query = query.eq('type', type.toUpperCase());
+    if (category) query = query.eq('category_name', category);
+    if (startDate) query = query.gte('transaction_date', startDate);
+    if (endDate) query = query.lte('transaction_date', endDate);
+
+    const { data, error } = await query;
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, data: { transactions: data } });
+  });
+}
+
+export async function POST(request: NextRequest) {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
+    const body = await request.json();
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({ ...body, user_id: userId })
+      .select()
+      .single();
+
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, data });
+  });
+}
+
+export async function DELETE(request: NextRequest) {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
+
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, message: 'Transação excluída' });
+  });
+}

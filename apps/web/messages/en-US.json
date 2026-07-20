@@ -1,0 +1,208 @@
+{
+  "common": {
+    "appName": "Travel.io",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "finance": "Finance",
+    "investments": "Investments",
+    "travel": "Travel",
+    "miles": "Miles",
+    "shopping": "Shopping",
+    "goals": "Goals",
+    "ai": "AI Assistant",
+    "analytics": "Analytics",
+    "profile": "Profile",
+    "settings": "Settings",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "landing": {
+    "hero": {
+      "title": "Your smart financial life",
+      "subtitle": "Finance, Investments, Travel, Miles, and Shopping in one ecosystem. AI connects everything to help you reach your goals.",
+      "cta": "Start your journey",
+      "demo": "View demo"
+    },
+    "features": {
+      "title": "Everything you need in one place",
+      "subtitle": "A complete platform integrating all areas of your financial life with artificial intelligence working for you.",
+      "finance": "Smart Finance",
+      "financeDesc": "Complete financial control with automatic categorization and personalized insights.",
+      "investments": "Integrated Investments",
+      "investmentsDesc": "Track your stocks, REITs, ETFs, and crypto portfolio in one place.",
+      "travel": "Travel & Miles",
+      "travelDesc": "Search flights, hotels, and manage your miles with price alerts and deals.",
+      "shopping": "Smart Shopping",
+      "shoppingDesc": "Wishlist with price monitoring, history, and store comparison.",
+      "ai": "AI Connects Everything",
+      "aiDesc": "Financial assistant that knows your profile and helps you make better decisions.",
+      "goals": "Clear Goals",
+      "goalsDesc": "Set financial goals and track progress with smart projections."
+    },
+    "pricing": {
+      "title": "Simple and transparent plans",
+      "subtitle": "Choose the ideal plan for you. No surprises, no hidden fees.",
+      "free": "Free",
+      "freePrice": "$0",
+      "freePeriod": "forever",
+      "pro": "Pro",
+      "proPrice": "$29",
+      "proPeriod": "/mo",
+      "premium": "Premium",
+      "premiumPrice": "$79",
+      "premiumPeriod": "/mo",
+      "cta": "Get started"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create account"
+    },
+    "register": {
+      "title": "Create your account",
+      "name": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "patrimony": "Net Worth",
+    "cashflow": "Cash Flow",
+    "goals": "Goals",
+    "investments": "Investments",
+    "travel": "Travel",
+    "miles": "Miles",
+    "wishlist": "Wishlist",
+    "insights": "AI Insights"
+  },
+  "finance": {
+    "accounts": "Accounts",
+    "transactions": "Transactions",
+    "cards": "Cards",
+    "budgets": "Budgets",
+    "subscriptions": "Subscriptions",
+    "income": "Income",
+    "expense": "Expense",
+    "transfer": "Transfer"
+  },
+  "travel": {
+    "search": "Search",
+    "flights": "Flights",
+    "hotels": "Hotels",
+    "cars": "Car rental",
+    "myTrips": "My Trips",
+    "map": "Map",
+    "alerts": "Alerts"
+  },
+  "miles": {
+    "accounts": "Miles Accounts",
+    "balance": "Balance",
+    "transfers": "Transfers",
+    "promotions": "Promotions",
+    "programs": {
+      "livel": "Livelo",
+      "smiles": "Smiles",
+      "latam": "LATAM Pass",
+      "azul": "Azul Fidelidade",
+      "c6": "C6 Átomos",
+      "xp": "XP"
+    }
+  },
+  "shopping": {
+    "wishlist": "Wishlist",
+    "deals": "Deals",
+    "priceHistory": "Price History",
+    "stores": "Stores"
+  },
+  "goals": {
+    "title": "Goals",
+    "create": "Create goal",
+    "types": {
+      "car": "Buy car",
+      "house": "Buy house",
+      "travel": "Travel",
+      "wedding": "Wedding",
+      "notebook": "Notebook",
+      "phone": "Phone",
+      "emergency": "Emergency Fund",
+      "custom": "Custom"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "personalData": "Personal Data",
+    "addresses": "Addresses",
+    "documents": "Documents",
+    "preferences": "Preferences",
+    "notifications": "Notifications"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": "Language",
+    "currency": "Currency"
+  },
+  "waitlist": {
+    "title": "Join the waitlist",
+    "description": "Be one of the first to use Travel.io and get exclusive benefits.",
+    "email": "Your email",
+    "name": "Your name (optional)",
+    "interest": "Your main interest",
+    "interests": {
+      "finance": "Personal Finance",
+      "investment": "Investments",
+      "travel": "Travel & Miles",
+      "shopping": "Smart Shopping",
+      "all": "Everything!"
+    },
+    "submit": "Join waitlist",
+    "success": {
+      "title": "You're on the list!",
+      "message": "Thank you for signing up. You'll receive an email when we have news.",
+      "referral": "Your referral code:",
+      "referralInfo": "Refer friends and move up the list! Each referral moves you forward."
+    }
+  }
+}

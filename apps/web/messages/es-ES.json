@@ -1,0 +1,208 @@
+{
+  "common": {
+    "appName": "Travel.io",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "finance": "Finanzas",
+    "investments": "Inversiones",
+    "travel": "Viajes",
+    "miles": "Millas",
+    "shopping": "Compras",
+    "goals": "Objetivos",
+    "ai": "Asistente IA",
+    "analytics": "Analíticas",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "admin": "Administración",
+    "logout": "Cerrar sesión"
+  },
+  "landing": {
+    "hero": {
+      "title": "Tu vida financiera inteligente",
+      "subtitle": "Finanzas, Inversiones, Viajes, Millas y Compras en un solo ecosistema. La IA conecta todo para que alcances tus objetivos.",
+      "cta": "Comienza tu viaje",
+      "demo": "Ver demo"
+    },
+    "features": {
+      "title": "Todo lo que necesitas en un solo lugar",
+      "subtitle": "Una plataforma completa que integra todas las áreas de tu vida financiera con inteligencia artificial trabajando para ti.",
+      "finance": "Finanzas Inteligentes",
+      "financeDesc": "Control financiero completo con categorización automática y recomendaciones personalizadas.",
+      "investments": "Inversiones Integradas",
+      "investmentsDesc": "Sigue tu cartera de acciones, FIIs, ETFs y criptomonedas en un solo lugar.",
+      "travel": "Viajes y Millas",
+      "travelDesc": "Busca vuelos, hoteles y gestiona tus millas con alertas de precio y promociones.",
+      "shopping": "Compras Inteligentes",
+      "shoppingDesc": "Lista de deseos con monitoreo de precios, historial y comparación entre tiendas.",
+      "ai": "IA que Conecta Todo",
+      "aiDesc": "Asistente financiero que conoce tu perfil y te ayuda a tomar mejores decisiones.",
+      "goals": "Objetivos Claros",
+      "goalsDesc": "Define metas financieras y sigue el progreso con proyecciones inteligentes."
+    },
+    "pricing": {
+      "title": "Planes simples y transparentes",
+      "subtitle": "Elige el plan ideal para ti. Sin sorpresas, sin cargos ocultos.",
+      "free": "Gratis",
+      "freePrice": "$0",
+      "freePeriod": "para siempre",
+      "pro": "Pro",
+      "proPrice": "$29",
+      "proPeriod": "/mes",
+      "premium": "Premium",
+      "premiumPrice": "$79",
+      "premiumPeriod": "/mes",
+      "cta": "Empezar ahora"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Entrar",
+      "noAccount": "¿No tienes cuenta?",
+      "createAccount": "Crear cuenta"
+    },
+    "register": {
+      "title": "Crear tu cuenta",
+      "name": "Nombre completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Crear cuenta",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "login": "Entrar"
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "patrimony": "Patrimonio",
+    "cashflow": "Flujo de Caja",
+    "goals": "Metas",
+    "investments": "Inversiones",
+    "travel": "Viajes",
+    "miles": "Millas",
+    "wishlist": "Lista de Deseos",
+    "insights": "Recomendaciones IA"
+  },
+  "finance": {
+    "accounts": "Cuentas",
+    "transactions": "Transacciones",
+    "cards": "Tarjetas",
+    "budgets": "Presupuestos",
+    "subscriptions": "Suscripciones",
+    "income": "Ingresos",
+    "expense": "Gastos",
+    "transfer": "Transferencia"
+  },
+  "travel": {
+    "search": "Buscar",
+    "flights": "Vuelos",
+    "hotels": "Hoteles",
+    "cars": "Alquiler de autos",
+    "myTrips": "Mis Viajes",
+    "map": "Mapa",
+    "alerts": "Alertas"
+  },
+  "miles": {
+    "accounts": "Cuentas de Millas",
+    "balance": "Saldo",
+    "transfers": "Transferencias",
+    "promotions": "Promociones",
+    "programs": {
+      "livel": "Livelo",
+      "smiles": "Smiles",
+      "latam": "LATAM Pass",
+      "azul": "Azul Fidelidade",
+      "c6": "C6 Átomos",
+      "xp": "XP"
+    }
+  },
+  "shopping": {
+    "wishlist": "Lista de Deseos",
+    "deals": "Ofertas",
+    "priceHistory": "Historial de Precios",
+    "stores": "Tiendas"
+  },
+  "goals": {
+    "title": "Objetivos",
+    "create": "Crear objetivo",
+    "types": {
+      "car": "Comprar coche",
+      "house": "Comprar casa",
+      "travel": "Viajes",
+      "wedding": "Boda",
+      "notebook": "Portátil",
+      "phone": "Móvil",
+      "emergency": "Fondo de Emergencia",
+      "custom": "Personalizado"
+    },
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "personalData": "Datos Personales",
+    "addresses": "Direcciones",
+    "documents": "Documentos",
+    "preferences": "Preferencias",
+    "notifications": "Notificaciones"
+  },
+  "settings": {
+    "title": "Configuración",
+    "theme": {
+      "title": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "language": "Idioma",
+    "currency": "Moneda"
+  },
+  "waitlist": {
+    "title": "Únete a la lista de espera",
+    "description": "Sé uno de los primeros en usar Travel.io y obtén beneficios exclusivos.",
+    "email": "Tu correo",
+    "name": "Tu nombre (opcional)",
+    "interest": "Tu interés principal",
+    "interests": {
+      "finance": "Finanzas Personales",
+      "investment": "Inversiones",
+      "travel": "Viajes y Millas",
+      "shopping": "Compras Inteligentes",
+      "all": "¡Todo!"
+    },
+    "submit": "Unirse a la lista",
+    "success": {
+      "title": "¡Estás en la lista!",
+      "message": "Gracias por registrarte. Recibirás un correo cuando tengamos novedades.",
+      "referral": "Tu código de referencia:",
+      "referralInfo": "¡Recomienda amigos y sube en la lista! Cada recomendación te mueve hacia adelante."
+    }
+  }
+}

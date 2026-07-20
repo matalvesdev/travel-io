@@ -1,0 +1,208 @@
+{
+  "common": {
+    "appName": "Travel.io",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "nav": {
+    "home": "Início",
+    "dashboard": "Dashboard",
+    "finance": "Finanças",
+    "investments": "Investimentos",
+    "travel": "Viagens",
+    "miles": "Milhas",
+    "shopping": "Shopping",
+    "goals": "Objetivos",
+    "ai": "Assistente IA",
+    "analytics": "Analytics",
+    "profile": "Perfil",
+    "settings": "Configurações",
+    "admin": "Administração",
+    "logout": "Sair"
+  },
+  "landing": {
+    "hero": {
+      "title": "Sua vida financeira inteligente",
+      "subtitle": "Finanças, Investimentos, Viagens, Milhas e Shopping em um único ecossistema. A IA conecta tudo para você alcançar seus objetivos.",
+      "cta": "Comece sua jornada",
+      "demo": "Ver demo"
+    },
+    "features": {
+      "title": "Tudo que você precisa em um só lugar",
+      "subtitle": "Uma plataforma completa que integra todas as áreas da sua vida financeira com inteligência artificial trabalhando para você.",
+      "finance": "Finanças Inteligentes",
+      "financeDesc": "Controle completo das suas finanças com categorização automática e insights personalizados.",
+      "investments": "Investimentos Integrados",
+      "investmentsDesc": "Acompanhe sua carteira de ações, FIIs, ETFs e criptomoedas em um só lugar.",
+      "travel": "Viagens & Milhas",
+      "travelDesc": "Pesquise voos, hotéis e gerencie suas milhas com alertas de preço e promoções.",
+      "shopping": "Shopping Inteligente",
+      "shoppingDesc": "Wishlist com monitoramento de preços, histórico e comparação entre lojas.",
+      "ai": "IA que Conecta Tudo",
+      "aiDesc": "Assistente financeiro que conhece seu perfil e ajuda a tomar melhores decisões.",
+      "goals": "Objetivos Claros",
+      "goalsDesc": "Defina metas financeiras e acompanhe o progresso com projeções inteligentes."
+    },
+    "pricing": {
+      "title": "Planos simples e transparentes",
+      "subtitle": "Escolha o plano ideal para você. Sem surpresas, sem taxas ocultas.",
+      "free": "Free",
+      "freePrice": "R$ 0",
+      "freePeriod": "para sempre",
+      "pro": "Pro",
+      "proPrice": "R$ 29",
+      "proPeriod": "/mês",
+      "premium": "Premium",
+      "premiumPrice": "R$ 79",
+      "premiumPeriod": "/mês",
+      "cta": "Começar agora"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar na sua conta",
+      "email": "Email",
+      "password": "Senha",
+      "forgotPassword": "Esqueceu a senha?",
+      "submit": "Entrar",
+      "noAccount": "Não tem conta?",
+      "createAccount": "Criar conta"
+    },
+    "register": {
+      "title": "Criar sua conta",
+      "name": "Nome completo",
+      "email": "Email",
+      "password": "Senha",
+      "confirmPassword": "Confirmar senha",
+      "submit": "Criar conta",
+      "hasAccount": "Já tem conta?",
+      "login": "Entrar"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "patrimony": "Patrimônio",
+    "cashflow": "Fluxo de Caixa",
+    "goals": "Metas",
+    "investments": "Investimentos",
+    "travel": "Viagens",
+    "miles": "Milhas",
+    "wishlist": "Wishlist",
+    "insights": "Insights da IA"
+  },
+  "finance": {
+    "accounts": "Contas",
+    "transactions": "Transações",
+    "cards": "Cartões",
+    "budgets": "Orçamentos",
+    "subscriptions": "Assinaturas",
+    "income": "Receita",
+    "expense": "Despesa",
+    "transfer": "Transferência"
+  },
+  "travel": {
+    "search": "Buscar",
+    "flights": "Voos",
+    "hotels": "Hotéis",
+    "cars": "Aluguel de carros",
+    "myTrips": "Minhas Viagens",
+    "map": "Mapa",
+    "alerts": "Alertas"
+  },
+  "miles": {
+    "accounts": "Contas de Milhas",
+    "balance": "Saldo",
+    "transfers": "Transferências",
+    "promotions": "Promoções",
+    "programs": {
+      "livel": "Livelo",
+      "smiles": "Smiles",
+      "latam": "LATAM Pass",
+      "azul": "Azul Fidelidade",
+      "c6": "C6 Átomos",
+      "xp": "XP"
+    }
+  },
+  "shopping": {
+    "wishlist": "Wishlist",
+    "deals": "Ofertas",
+    "priceHistory": "Histórico de Preços",
+    "stores": "Lojas"
+  },
+  "goals": {
+    "title": "Objetivos",
+    "create": "Criar objetivo",
+    "types": {
+      "car": "Comprar carro",
+      "house": "Comprar casa",
+      "travel": "Viagens",
+      "wedding": "Casamento",
+      "notebook": "Notebook",
+      "phone": "Celular",
+      "emergency": "Reserva de Emergência",
+      "custom": "Personalizado"
+    },
+    "priority": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "personalData": "Dados Pessoais",
+    "addresses": "Endereços",
+    "documents": "Documentos",
+    "preferences": "Preferências",
+    "notifications": "Notificações"
+  },
+  "settings": {
+    "title": "Configurações",
+    "theme": {
+      "title": "Tema",
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    },
+    "language": "Idioma",
+    "currency": "Moeda"
+  },
+  "waitlist": {
+    "title": "Junte-se à waitlist",
+    "description": "Seja um dos primeiros a usar o Travel.io e ganhe benefícios exclusivos.",
+    "email": "Seu email",
+    "name": "Seu nome (opcional)",
+    "interest": "Seu interesse principal",
+    "interests": {
+      "finance": "Finanças Pessoais",
+      "investment": "Investimentos",
+      "travel": "Viagens & Milhas",
+      "shopping": "Shopping Inteligente",
+      "all": "Tudo!"
+    },
+    "submit": "Entrar na waitlist",
+    "success": {
+      "title": "Você está na lista!",
+      "message": "Obrigado por se inscrever. Você receberá um email quando tivermos novidades.",
+      "referral": "Seu código de indicação:",
+      "referralInfo": "Indique amigos e suba na fila! Cada indicação move você para frente."
+    }
+  }
+}

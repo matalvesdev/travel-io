@@ -1,0 +1,15 @@
+export type { ApiResponse, PaginatedResponse } from './api';
+export type { LoginRequest, RegisterRequest, AuthResponse, RefreshTokenRequest, User } from './auth';
+export type { Account, Transaction, Budget, Subscription, ParsedTransaction, CreateAccountRequest, CreateTransactionRequest } from './finance';
+export type { Investment, Allocation, AllocationItem, Dividend, CreateInvestmentRequest } from './investments';
+export type { Trip, Flight, Hotel, CreateTripRequest, CreateFlightRequest, CreateHotelRequest, CreatePriceAlertRequest, FlightSearchResult, HotelSearchResult, LocationResult } from './travel';
+export type { MilesAccount, TransferRoute, Promotion, LinkMilesAccountRequest } from './miles';
+export type { Wishlist, WishlistItem, Deal, Coupon, CreateWishlistRequest, AddToWishlistRequest } from './shopping';
+export type { Goal, Milestone, GoalTemplate, CreateGoalRequest, AddGoalProgressRequest } from './goals';
+export type { Conversation, Message, SendMessageRequest, CreateConversationRequest } from './ai';
+export type { Insight, ForecastItem } from './analytics';
+export type { Notification, NotificationPreference, SendNotificationRequest, MarkAsReadRequest } from './notifications';
+export type { Plan, FeatureFlag, AuditLog, SystemHealth, ToggleFeatureFlagRequest } from './admin';
+export type { UpdateProfileRequest, ProfileData } from './profile';
+export type { DashboardData, Patrimony, PatrimonyItem, CashFlow, CashFlowItem, GoalProgress, InvestmentSummary, InvestmentAllocation, TravelSummary, MilesSummary, MilesBalance, ShoppingSummary, BestDeal, DashboardInsight, CategoryChartData, CashFlowChartData } from './dashboard';
+export type { ChangePasswordRequest, Session, LoginHistoryEntry, PaymentMethod, SettingsPlan, NotificationPreferences } from './settings';
