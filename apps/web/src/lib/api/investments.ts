@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Investment } from '@travelio/shared';
+import type { Investment } from '@/types/shared';
 
 export type { Investment };
 

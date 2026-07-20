@@ -15,7 +15,7 @@ export type {
   DashboardData, DashboardInsight, Patrimony, CashFlow,
   CategoryChartData, CashFlowChartData,
   Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, ChangePasswordRequest,
-} from '@travelio/shared';
+} from './shared';
 
 export interface SortConfig {
   key: string;

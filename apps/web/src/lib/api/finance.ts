@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Transaction, CreateTransactionRequest } from '@travelio/shared';
+import type { Transaction, CreateTransactionRequest } from '@/types/shared';
 
 export type { Transaction, CreateTransactionRequest };
 

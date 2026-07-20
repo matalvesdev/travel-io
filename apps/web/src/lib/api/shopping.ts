@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Deal, Coupon } from '@travelio/shared';
+import type { Deal, Coupon } from '@/types/shared';
 
 export type { Deal, Coupon };
 

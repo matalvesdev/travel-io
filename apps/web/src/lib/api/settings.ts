@@ -1,4 +1,4 @@
-import type { ChangePasswordRequest, Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, NotificationPreferences } from '@travelio/shared';
+import type { ChangePasswordRequest, Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, NotificationPreferences } from '@/types/shared';
 import { apiClient, type ApiResponse } from './client';
 
 export type { ChangePasswordRequest, Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, NotificationPreferences };

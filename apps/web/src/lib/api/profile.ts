@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { ProfileData } from '@travelio/shared';
+import type { ProfileData } from '@/types/shared';
 
 export type { ProfileData };
 
