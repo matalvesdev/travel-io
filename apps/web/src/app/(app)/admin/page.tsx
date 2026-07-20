@@ -18,7 +18,7 @@ export default function AdminPage() {
     { t: 'Planos', v: plansData?.plans?.length ?? '—', icon: Shield, color: 'text-success' },
   ];
 
-  const flags = flagsData?.flags ?? [];
+  const flags: Array<{ id: string; name: string; key: string; isEnabled: boolean }> = flagsData?.flags ?? [];
 
   const isLoading = healthLoading || flagsLoading || plansLoading;
 
