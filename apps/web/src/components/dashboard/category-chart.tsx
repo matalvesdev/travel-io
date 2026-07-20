@@ -6,7 +6,13 @@ import { PieChart as PieChartIcon, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils/format';
-import type { CategoryChartData } from '@travelio/shared';
+
+interface CategoryChartData {
+  name: string;
+  value: number;
+  percentage: number;
+  color: string;
+}
 
 interface CategoryChartProps {
   data: CategoryChartData[];
