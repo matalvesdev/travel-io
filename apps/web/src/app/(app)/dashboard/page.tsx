@@ -133,7 +133,7 @@ export default function DashboardPage() {
                 <p className="text-center text-muted-foreground py-8">Nenhuma transação encontrada</p>
               ) : (
                 <div className="space-y-2">
-                  {transactions.slice(0, 6).map((t: { id: string; description: string; amount: number; type: string; date: string }, i) => (
+                  {transactions.slice(0, 6).map((t: { id: string; description: string; amount: number; type: string; date: string }, i: number) => (
                     <motion.div
                       key={t.id}
                       initial={{ opacity: 0, x: -10 }}
