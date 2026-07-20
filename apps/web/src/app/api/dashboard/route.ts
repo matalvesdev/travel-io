@@ -1,6 +1,18 @@
 import { NextRequest } from 'next/server';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
-import type { CategoryChartData, CashFlowChartData } from '@travelio/shared';
+
+interface CategoryChartData {
+  name: string;
+  value: number;
+  percentage: number;
+  color: string;
+}
+
+interface CashFlowChartData {
+  month: string;
+  income: number;
+  expenses: number;
+}
 
 export async function GET(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId, supabase }) => {
