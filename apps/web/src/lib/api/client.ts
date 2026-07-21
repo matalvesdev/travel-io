@@ -96,6 +96,10 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'PUT', body, timeout });
   }
 
+  async patch<T>(endpoint: string, body?: unknown, timeout?: number): Promise<T> {
+    return this.request<T>(endpoint, { method: 'PATCH', body, timeout });
+  }
+
   async delete<T>(endpoint: string, timeout?: number): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE', timeout });
   }

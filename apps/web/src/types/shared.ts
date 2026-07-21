@@ -898,3 +898,67 @@ export interface DashboardData {
   insights: DashboardInsight[];
   lastUpdated: string;
 }
+
+// === Skyscanner ===
+export interface FlightResult {
+  id: string;
+  airline: string;
+  airlineLogo: string;
+  origin: string;
+  destination: string;
+  departure: string;
+  arrival: string;
+  duration: string;
+  stops: number;
+  price: number;
+  currency: string;
+  deepLink: string;
+}
+
+export interface HotelResult {
+  id: string;
+  name: string;
+  address: string;
+  rating: number;
+  price: number;
+  currency: string;
+  imageUrl: string;
+  amenities: string[];
+  deepLink: string;
+}
+
+export interface TripWithDetails extends Trip {
+  flights?: FlightResult[];
+  hotels?: HotelResult[];
+  flightCost?: number;
+  hotelCost?: number;
+}
+
+export interface MilesTransfer {
+  id: string;
+  fromProgram: string;
+  toProgram: string;
+  miles: number;
+  convertedMiles: number;
+  conversionRate: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface MilesPromotion {
+  id: string;
+  program: string;
+  title: string;
+  description: string;
+  bonusPercentage: number;
+  validUntil: string;
+  link: string;
+}
+
+export interface SavingsCalculation {
+  cashPrice: number;
+  milesNeeded: number;
+  milesValue: number;
+  savings: number;
+  savingsPercentage: number;
+}
