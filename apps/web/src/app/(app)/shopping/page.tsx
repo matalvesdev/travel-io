@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Search, Heart, Bell, Tag, ShoppingBag, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { MetricCard } from '@/components/analytics/metric-card';
 import { SearchPanel } from '@/components/shopping/search-panel';
 import { WishlistPanel } from '@/components/shopping/wishlist-panel';
 import { MonitorsPanel } from '@/components/shopping/monitors-panel';
@@ -60,22 +61,30 @@ export default function ShoppingPage() {
 
       {/* Stats Row */}
       <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { icon: ShoppingBag, label: 'Itens na Wishlist', value: wishlistCount.toString(), color: 'bg-pink-500/10 text-pink-500' },
-          { icon: TrendingDown, label: 'Economia Potencial', value: formatCurrency(potentialSavings), color: 'bg-success/10 text-success' },
-          { icon: Bell, label: 'Alertas Ativos', value: alertsCount.toString(), color: 'bg-violet-500/10 text-violet-500' },
-          { icon: Tag, label: 'Cupons Disponíveis', value: couponsCount.toString(), color: 'bg-amber-500/10 text-amber-500' },
-        ].map((s, i) => (
-          <div key={i} className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className={`rounded-xl p-3 ${s.color}`}><s.icon className="h-5 w-5" /></div>
-              <div>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className="text-xl font-bold">{s.value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+        <MetricCard
+          title="Itens na Wishlist"
+          value={wishlistCount.toString()}
+          icon={ShoppingBag}
+          iconColor="text-pink-500"
+        />
+        <MetricCard
+          title="Economia Potencial"
+          value={formatCurrency(potentialSavings)}
+          icon={TrendingDown}
+          iconColor="text-success"
+        />
+        <MetricCard
+          title="Alertas Ativos"
+          value={alertsCount.toString()}
+          icon={Bell}
+          iconColor="text-violet-500"
+        />
+        <MetricCard
+          title="Cupons Disponíveis"
+          value={couponsCount.toString()}
+          icon={Tag}
+          iconColor="text-amber-500"
+        />
       </div>
 
       {/* Tabs */}

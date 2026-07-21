@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
+import { MetricCard } from '@/components/analytics/metric-card';
 import { ImportCSV } from '@/components/finance/import-csv';
 import { useTransactions, useCreateTransaction, useDeleteTransaction, useUpdateTransaction } from '@/hooks/api/use-finance';
 import type { Transaction, CreateTransactionRequest } from '@/lib/api';
@@ -310,39 +311,24 @@ export default function FinancePage() {
 
       {/* Stats Row */}
       <div className="grid gap-4 md:grid-cols-3">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="phantom-card">
-          <div className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-primary/10 p-3"><Wallet className="h-5 w-5 text-primary" /></div>
-              <div>
-                <p className="text-xs text-muted-foreground">Saldo Mensal</p>
-                <p className={`text-2xl font-bold ${monthlyBalance >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(monthlyBalance)}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} whileHover={{ y: -2 }} className="phantom-card">
-          <div className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-success/10 p-3"><TrendingUp className="h-5 w-5 text-success" /></div>
-              <div>
-                <p className="text-xs text-muted-foreground">Receitas do Mês</p>
-                <p className="text-2xl font-bold text-success">{formatCurrency(totalIncome)}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} whileHover={{ y: -2 }} className="phantom-card">
-          <div className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-destructive/10 p-3"><TrendingDown className="h-5 w-5 text-destructive" /></div>
-              <div>
-                <p className="text-xs text-muted-foreground">Despesas do Mês</p>
-                <p className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        <MetricCard
+          title="Saldo Mensal"
+          value={formatCurrency(monthlyBalance)}
+          icon={Wallet}
+          iconColor={monthlyBalance >= 0 ? 'text-success' : 'text-destructive'}
+        />
+        <MetricCard
+          title="Receitas do Mês"
+          value={formatCurrency(totalIncome)}
+          icon={TrendingUp}
+          iconColor="text-success"
+        />
+        <MetricCard
+          title="Despesas do Mês"
+          value={formatCurrency(totalExpenses)}
+          icon={TrendingDown}
+          iconColor="text-destructive"
+        />
       </div>
 
       {/* Transactions Table */}
