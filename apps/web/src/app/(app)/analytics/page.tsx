@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <CategoryBreakdown data={categoryData} loading={categoryLoading} />
         <ForecastChart
-          data={forecastData}
+          data={forecastData ?? []}
           historicalData={monthlyData.map((d) => ({ month: d.month, expenses: d.expenses }))}
           loading={forecastLoading}
         />
