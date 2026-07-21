@@ -34,7 +34,10 @@ export function getSupabaseAdmin() {
 
 // Server-side client with cookie support (for Route Handlers & Server Components)
 export function createServerClient(request: NextRequest, response: NextResponse) {
-  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  return createSupabaseServerClient(url, key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -51,7 +54,10 @@ export function createServerClient(request: NextRequest, response: NextResponse)
 
 // Browser-side client with cookie support
 export function createBrowserClient() {
-  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  return createSupabaseServerClient(url, key, {
     cookies: {
       getAll() {
         const cookies: { name: string; value: string }[] = [];
