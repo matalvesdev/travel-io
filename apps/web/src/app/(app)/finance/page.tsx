@@ -1,4 +1,5 @@
 'use client';
+
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -8,12 +9,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
-import { FileUpload } from '@/components/finance/file-upload';
-import type { ParsedTransaction } from '@/lib/api/parse-csv';
-import { financeApi, type Transaction } from '@/lib/api';
+import { ImportCSV } from '@/components/finance/import-csv';
+import { useTransactions, useCreateTransaction, useDeleteTransaction, useUpdateTransaction } from '@/hooks/api/use-finance';
+import type { Transaction, CreateTransactionRequest } from '@/lib/api';
 
 const ITEMS_PER_PAGE = 20;
-const STORAGE_KEY = 'travelio_imported_transactions';
 
 const MONTH_OPTIONS = [
   { value: '0', label: 'Jan' }, { value: '1', label: 'Fev' }, { value: '2', label: 'Mar' },
@@ -31,13 +31,6 @@ const TYPE_OPTIONS = [
   { value: 'ALL', label: 'Todos' },
   { value: 'INCOME', label: 'Receitas' },
   { value: 'EXPENSE', label: 'Despesas' },
-];
-
-const METHOD_OPTIONS = [
-  { value: 'ALL', label: 'Todos' },
-  { value: 'PIX', label: 'PIX' },
-  { value: 'DEBITO', label: 'Débito' },
-  { value: 'CREDITO', label: 'Crédito' },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -103,29 +96,37 @@ function getCompanyInfo(description: string) {
   return null;
 }
 
-function inferMethod(description: string, categoryName?: string): string {
-  const lower = (description + ' ' + (categoryName || '')).toLowerCase();
+function inferMethod(description: string): string {
+  const lower = description.toLowerCase();
   if (lower.includes('crédito') || lower.includes('credito') || lower.includes('cartão')) return 'Crédito';
   if (lower.includes('débito') || lower.includes('debito')) return 'Débito';
   if (lower.includes('pix')) return 'PIX';
-  if (lower.includes('netflix') || lower.includes('spotify') || lower.includes('amazon') || lower.includes('apple') || lower.includes('canva') || lower.includes('deezer')) return 'Crédito';
+  if (['netflix', 'spotify', 'amazon', 'apple', 'canva', 'deezer'].some(s => lower.includes(s))) return 'Crédito';
   return 'PIX';
 }
 
-function loadStoredTransactions(): Transaction[] {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch { return []; }
-}
-
-function saveStoredTransactions(txs: Transaction[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(txs)); } catch {}
+function detectCategoryFromInput(desc: string): string {
+  const lower = desc.toLowerCase();
+  const cats: Record<string, string[]> = {
+    'Alimentação': ['supermercado', 'mercado', 'ifood', 'restaurante', 'almoço', 'jantar', 'lanche', 'padaria', 'starbucks', 'mcdonald', 'bk', 'popeyes', 'pizza', 'sushi', 'café', '99 food', 'pague menos', 'enxuto', 'savegnago'],
+    'Moradia': ['aluguel', 'condomínio', 'luz', 'água', 'internet', 'celular', 'sanasa', 'cpfl', 'energia'],
+    'Transporte': ['uber', '99', 'combustível', 'gasolina', 'estacionamento', 'ônibus'],
+    'Saúde': ['farmácia', 'médico', 'hospital', 'academia', 'drogasil', 'unimed', 'conselho', 'psicoterapia'],
+    'Lazer': ['netflix', 'spotify', 'cinema', 'show', 'bar'],
+    'Pets': ['pet', 'paco', 'animal'],
+    'Educação': ['faculdade', 'curso', 'livro', 'escola', 'marketing'],
+    'Casa': ['casa', 'consultório', 'coisa'],
+    'Vestuário': ['roupa', 'shein', 'renner', 'pernambucanas', 'cosmético'],
+    'Dívidas': ['serasa', 'empréstimo', 'acordo'],
+  };
+  for (const [cat, kws] of Object.entries(cats)) {
+    if (kws.some(kw => lower.includes(kw))) return cat;
+  }
+  return 'Outros';
 }
 
 export default function FinancePage() {
   const now = new Date();
-  const [loading, setLoading] = React.useState(true);
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [newTransaction, setNewTransaction] = React.useState({
@@ -133,11 +134,9 @@ export default function FinancePage() {
     date: new Date().toISOString().split('T')[0], category: '',
   });
 
-  const [allTransactions, setAllTransactions] = React.useState<Transaction[]>([]);
   const [filterType, setFilterType] = React.useState('ALL');
   const [filterCategory, setFilterCategory] = React.useState('ALL');
-  const [filterMethod, setFilterMethod] = React.useState('ALL');
-  const [filterYear, setFilterYear] = React.useState('2026');
+  const [filterYear, setFilterYear] = React.useState(String(now.getFullYear()));
   const [filterMonth, setFilterMonth] = React.useState(String(now.getMonth()));
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -145,47 +144,23 @@ export default function FinancePage() {
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editData, setEditData] = React.useState({ description: '', amount: '', category: '', date: '' });
-  const [showInstallments, setShowInstallments] = React.useState(false);
 
-  // Load data once on mount: localStorage + API
-  React.useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const stored = loadStoredTransactions();
-      let apiData: Transaction[] = [];
-      try {
-        const res = await financeApi.getTransactions({ startDate: '2020-01-01', endDate: '2030-12-31' }).catch(() => null);
-        apiData = res?.data?.transactions || [];
-      } catch {}
-      // Merge: stored imports + API data, deduplicate by id
-      const merged = [...stored];
-      for (const tx of apiData) {
-        if (!merged.find(m => m.id === tx.id)) merged.push(tx);
-      }
-      setAllTransactions(merged);
-      setLoading(false);
-    }
-    load();
-  }, []);
+  const startDate = `${filterYear}-${String(parseInt(filterMonth) + 1).padStart(2, '0')}-01`;
+  const endMonth = parseInt(filterMonth) + 1;
+  const endYear = parseInt(filterYear);
+  const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-${new Date(endYear, endMonth, 0).getDate()}`;
 
-  // Client-side filtering by year/month + type + category + method + search
+  const { data: transactionsData, isLoading } = useTransactions({ startDate, endDate });
+  const allTransactions = transactionsData?.transactions || [];
+  const createTransaction = useCreateTransaction();
+  const deleteTransaction = useDeleteTransaction();
+  const updateTransaction = useUpdateTransaction();
+
   const filteredTransactions = React.useMemo(() => {
-    const year = parseInt(filterYear);
-    const month = parseInt(filterMonth);
-    const monthStr = String(month + 1).padStart(2, '0');
-    const yearMonthPrefix = `${year}-${monthStr}`;
-
-    let result = allTransactions.filter(t => {
-      const date = t.transactionDate || '';
-      return date.startsWith(yearMonthPrefix);
-    });
+    let result = [...allTransactions];
 
     if (filterType !== 'ALL') result = result.filter(t => t.type === filterType);
     if (filterCategory !== 'ALL') result = result.filter(t => t.categoryName === filterCategory);
-    if (filterMethod !== 'ALL') {
-      const methodName = filterMethod === 'PIX' ? 'PIX' : filterMethod === 'CREDITO' ? 'Crédito' : 'Débito';
-      result = result.filter(t => inferMethod(t.description || '', t.categoryName) === methodName);
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(t =>
@@ -194,33 +169,6 @@ export default function FinancePage() {
       );
     }
 
-    // Sort chronologically first (ascending) to process fallback dates
-    result.sort((a, b) => (a.transactionDate || '').localeCompare(b.transactionDate || ''));
-
-    // Post-process: transactions with "-15" fallback date get reassigned
-    // to the day after the previous chronological transaction
-    const nowDate = new Date();
-    const isCurrentMonth = parseInt(filterYear) === nowDate.getFullYear() && parseInt(filterMonth) === nowDate.getMonth();
-    const maxDay = isCurrentMonth ? nowDate.getDate() : new Date(year, month + 1, 0).getDate();
-    let prevDay = 0;
-    result = result.map(t => {
-      const day = parseInt(t.transactionDate?.split('-')[2] || '15');
-      if (day === 15 && t.transactionDate?.endsWith('-15')) {
-        const nextDay = Math.min(prevDay + 1, maxDay);
-        prevDay = nextDay;
-        return { ...t, transactionDate: `${yearMonthPrefix}-${String(nextDay).padStart(2, '0')}` };
-      }
-      prevDay = day;
-      return t;
-    });
-
-    // Final filter: remove any dates beyond today for current month
-    if (isCurrentMonth) {
-      const todayStr = `${yearMonthPrefix}-${String(nowDate.getDate()).padStart(2, '0')}`;
-      result = result.filter(t => (t.transactionDate || '') <= todayStr);
-    }
-
-    // Re-sort descending (newest first) for display
     result.sort((a, b) => {
       const dateA = a.transactionDate || '';
       const dateB = b.transactionDate || '';
@@ -229,49 +177,47 @@ export default function FinancePage() {
     });
 
     return result;
-  }, [allTransactions, filterType, filterCategory, filterMethod, searchQuery, filterYear, filterMonth]);
+  }, [allTransactions, filterType, filterCategory, searchQuery]);
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
   const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  React.useEffect(() => { setCurrentPage(1); }, [filterType, filterCategory, filterMethod, searchQuery, filterYear, filterMonth]);
+  React.useEffect(() => { setCurrentPage(1); }, [filterType, filterCategory, searchQuery, filterYear, filterMonth]);
+
+  const totalIncome = filteredTransactions.filter(t => t.type === 'INCOME').reduce((s, t) => s + Math.abs(t.amount), 0);
+  const totalExpenses = filteredTransactions.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + Math.abs(t.amount), 0);
+  const monthlyBalance = totalIncome - totalExpenses;
 
   const handleAddTransaction = () => {
     if (!newTransaction.description || !newTransaction.amount) return;
     const amount = parseFloat(newTransaction.amount);
     if (isNaN(amount) || amount === 0) return;
-    const tx: Transaction = {
-      id: `manual-${Date.now()}`,
-      description: newTransaction.description,
-      amount: Math.abs(amount),
+
+    const payload: CreateTransactionRequest = {
       type: newTransaction.type,
+      amount: Math.abs(amount),
+      description: newTransaction.description,
       transactionDate: newTransaction.date,
-      categoryName: newTransaction.category || detectCategoryFromInput(newTransaction.description),
-    } as Transaction;
-    const updated = [tx, ...allTransactions];
-    setAllTransactions(updated);
-    saveStoredTransactions(updated);
-    setShowAddModal(false);
-    setNewTransaction({ description: '', amount: '', type: 'EXPENSE', date: new Date().toISOString().split('T')[0], category: '' });
+      accountId: '',
+    };
+    createTransaction.mutate(payload, {
+      onSuccess: () => {
+        setShowAddModal(false);
+        setNewTransaction({ description: '', amount: '', type: 'EXPENSE', date: new Date().toISOString().split('T')[0], category: '' });
+      },
+    });
   };
 
-  const handleImportTransactions = (parsed: ParsedTransaction[]) => {
-    const newTxs = parsed.map((t, i) => ({
-      id: `imported-${Date.now()}-${i}`,
-      description: t.description,
-      amount: t.amount,
-      type: t.type,
-      transactionDate: t.date,
-      categoryName: t.category || 'Outros',
-      installmentCurrent: t.installmentCurrent,
-      installmentTotal: t.installmentTotal,
-    } as Transaction));
-
-    // Remove previous imported data, keep only manual entries
-    const manual = allTransactions.filter(t => !String(t.id).startsWith('imported-'));
-    const updated = [...manual, ...newTxs];
-    setAllTransactions(updated);
-    saveStoredTransactions(updated);
+  const handleImportTransactions = (parsed: { date: string; description: string; amount: number; type: string }[]) => {
+    for (const t of parsed) {
+      createTransaction.mutate({
+        type: t.type,
+        amount: t.amount,
+        description: t.description,
+        transactionDate: t.date,
+        accountId: '',
+      });
+    }
     setShowImportModal(false);
   };
 
@@ -303,71 +249,66 @@ export default function FinancePage() {
 
   const saveEdit = () => {
     if (!editingId) return;
-    const updated = allTransactions.map(t => {
-      if (String(t.id) !== editingId) return t;
-      return {
-        ...t,
+    updateTransaction.mutate({
+      id: editingId,
+      data: {
         description: editData.description,
         amount: Math.abs(parseFloat(editData.amount) || 0),
         transactionDate: editData.date,
-        categoryName: editData.category,
-      };
-    });
-    setAllTransactions(updated);
-    saveStoredTransactions(updated);
-    setEditingId(null);
+      },
+    }, { onSuccess: () => setEditingId(null) });
   };
 
-  const cancelEdit = () => { setEditingId(null); };
-
   const deleteSelected = () => {
-    const updated = allTransactions.filter(t => !selectedIds.has(String(t.id)));
-    setAllTransactions(updated);
-    saveStoredTransactions(updated);
+    for (const id of selectedIds) {
+      deleteTransaction.mutate(id);
+    }
     setSelectedIds(new Set());
   };
 
-  const deleteTransaction = (id: string) => {
-    const updated = allTransactions.filter(t => String(t.id) !== id);
-    setAllTransactions(updated);
-    saveStoredTransactions(updated);
+  const deleteSingle = (id: string) => {
+    deleteTransaction.mutate(id);
   };
 
-  function detectCategoryFromInput(desc: string): string {
-    const lower = desc.toLowerCase();
-    const cats: Record<string, string[]> = {
-      'Alimentação': ['supermercado', 'mercado', 'ifood', 'restaurante', 'almoço', 'jantar', 'lanche', 'padaria', 'starbucks', 'mcdonald', 'bk', 'popeyes', 'pizza', 'sushi', 'café', '99 food', 'pague menos', 'enxuto', 'savegnago'],
-      'Moradia': ['aluguel', 'condomínio', 'luz', 'água', 'internet', 'celular', 'sanasa', 'cpfl', 'energia'],
-      'Transporte': ['uber', '99', 'combustível', 'gasolina', 'estacionamento', 'ônibus'],
-      'Saúde': ['farmácia', 'médico', 'hospital', 'academia', 'drogasil', 'unimed', 'conselho', 'psicoterapia'],
-      'Lazer': ['netflix', 'spotify', 'cinema', 'show', 'bar'],
-      'Pets': ['pet', 'paco', 'animal'],
-      'Educação': ['faculdade', 'curso', 'livro', 'escola', 'marketing'],
-      'Casa': ['casa', 'consultório', 'coisa'],
-      'Vestuário': ['roupa', 'shein', 'renner', 'pernambucanas', 'cosmético'],
-      'Dívidas': ['serasa', 'empréstimo', 'acordo'],
-    };
-    for (const [cat, kws] of Object.entries(cats)) {
-      if (kws.some(kw => lower.includes(kw))) return cat;
-    }
-    return 'Outros';
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
-
-  if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-
-  const totalIncome = filteredTransactions.filter(t => t.type === 'INCOME').reduce((s, t) => s + Math.abs(t.amount), 0);
-  const totalExpenses = filteredTransactions.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + Math.abs(t.amount), 0);
-  const monthlyBalance = totalIncome - totalExpenses;
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Finanças</h1>
-        <p className="text-muted-foreground">{MONTH_NAMES[parseInt(filterMonth)]} {filterYear}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Finanças</h1>
+          <p className="text-muted-foreground">{MONTH_NAMES[parseInt(filterMonth)]} {filterYear}</p>
+        </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Period Selector */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex rounded-lg border overflow-hidden">
+          {MONTH_OPTIONS.map(opt => (
+            <button key={opt.value} onClick={() => setFilterMonth(opt.value)}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${filterMonth === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex rounded-lg border overflow-hidden">
+          {YEAR_OPTIONS.map(opt => (
+            <button key={opt.value} onClick={() => setFilterYear(opt.value)}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${filterYear === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Row */}
       <div className="grid gap-4 md:grid-cols-3">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="phantom-card">
           <div className="p-5">
@@ -404,52 +345,6 @@ export default function FinancePage() {
         </motion.div>
       </div>
 
-      {/* Month/Year Quick Selector */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex rounded-lg border overflow-hidden">
-          {MONTH_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => setFilterMonth(opt.value)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${filterMonth === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex rounded-lg border overflow-hidden">
-          {YEAR_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => setFilterYear(opt.value)}
-              className={`px-3 py-2 text-xs font-medium transition-colors ${filterYear === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Installments Card */}
-      {allTransactions.filter(t => t.installmentTotal && t.installmentTotal > 0).length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
-          className="phantom-card cursor-pointer" onClick={() => setShowInstallments(true)}>
-          <div className="p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-violet-500/10 p-3">
-                <svg className="h-5 w-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Parcelamentos Ativos</p>
-                <p className="text-lg font-bold">
-                  {allTransactions.filter(t => t.installmentTotal && t.installmentTotal > 0).length} parcelas
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Total em Parcelas</p>
-              <p className="text-lg font-bold text-violet-500">
-                {formatCurrency(allTransactions.filter(t => t.installmentTotal && t.installmentTotal > 0).reduce((s, t) => s + (t.amount || 0), 0))}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
       {/* Transactions Table */}
       <div className="phantom-card overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-border/50">
@@ -480,17 +375,6 @@ export default function FinancePage() {
                   {TYPE_OPTIONS.map(opt => (
                     <button key={opt.value} onClick={() => setFilterType(opt.value)}
                       className={`px-3 py-1.5 text-xs font-medium transition-colors ${filterType === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Método</label>
-                <div className="flex rounded-lg border overflow-hidden">
-                  {METHOD_OPTIONS.map(opt => (
-                    <button key={opt.value} onClick={() => setFilterMethod(opt.value)}
-                      className={`px-3 py-1.5 text-xs font-medium transition-colors ${filterMethod === opt.value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                       {opt.label}
                     </button>
                   ))}
@@ -553,7 +437,7 @@ export default function FinancePage() {
                   const tid = String(t.id);
                   const isEditing = editingId === tid;
                   const isSelected = selectedIds.has(tid);
-                  const method = inferMethod(t.description || '', t.categoryName);
+                  const method = inferMethod(t.description || '');
                   const company = getCompanyInfo(t.description || '');
                   return (
                     <motion.tr key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.015 }}
@@ -619,14 +503,14 @@ export default function FinancePage() {
                           {isEditing ? (
                             <>
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={saveEdit}><Check className="h-3 w-3" /></Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}><X className="h-3 w-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="h-3 w-3" /></Button>
                             </>
                           ) : (
                             <>
                               <button onClick={() => startEdit(t)} className="text-muted-foreground hover:text-foreground p-1">
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                               </button>
-                              <button onClick={() => deleteTransaction(tid)} className="text-muted-foreground hover:text-destructive p-1">
+                              <button onClick={() => deleteSingle(tid)} className="text-muted-foreground hover:text-destructive p-1">
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                               </button>
                             </>
@@ -679,71 +563,14 @@ export default function FinancePage() {
               <div><label className="text-sm font-medium mb-1 block">Valor (R$)</label><Input type="number" step="0.01" value={newTransaction.amount} onChange={e => setNewTransaction({ ...newTransaction, amount: e.target.value })} placeholder="0,00" /></div>
               <div><label className="text-sm font-medium mb-1 block">Data</label><Input type="date" value={newTransaction.date} onChange={e => setNewTransaction({ ...newTransaction, date: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1 block">Categoria</label><Input value={newTransaction.category} onChange={e => setNewTransaction({ ...newTransaction, category: e.target.value })} placeholder="Auto-detectar (opcional)" /></div>
-              <Button onClick={handleAddTransaction} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" disabled={!newTransaction.description || !newTransaction.amount}>
-                <Check className="mr-2 h-4 w-4" /> Adicionar Transação
+              <Button onClick={handleAddTransaction} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" disabled={!newTransaction.description || !newTransaction.amount || createTransaction.isPending}>
+                {createTransaction.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                Adicionar Transação
               </Button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Installments Detail Modal */}
-      {showInstallments && (() => {
-        const installments = allTransactions.filter(t => t.installmentTotal && t.installmentTotal > 0);
-        // Group by description
-        const grouped: Record<string, { items: Transaction[]; total: number }> = {};
-        for (const t of installments) {
-          const key = t.description || 'Parcela';
-          if (!grouped[key]) grouped[key] = { items: [], total: 0 };
-          grouped[key].items.push(t);
-          grouped[key].total += t.amount || 0;
-        }
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="phantom-card-elevated w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col">
-              <div className="flex items-center justify-between p-6 pb-4">
-                <h3 className="text-lg font-semibold">Parcelamentos</h3>
-                <Button variant="ghost" size="icon" onClick={() => setShowInstallments(false)}><X className="h-4 w-4" /></Button>
-              </div>
-              <div className="overflow-y-auto px-6 pb-6 space-y-4">
-                {Object.entries(grouped).map(([name, { items, total }]) => {
-                  const maxParcela = Math.max(...items.map(t => t.installmentTotal || 0));
-                  const currentParcela = Math.max(...items.map(t => t.installmentCurrent || 0));
-                  const progress = maxParcela > 0 ? (currentParcela / maxParcela) * 100 : 0;
-                  return (
-                    <div key={name} className="rounded-xl border p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{name}</span>
-                        <span className="text-sm font-bold text-violet-500">{formatCurrency(total)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Parcela {currentParcela}/{maxParcela}</span>
-                        <span>·</span>
-                        <span>{formatCurrency(total / maxParcela)}/mês</span>
-                        <span>·</span>
-                        <span>{items.length} pagamento{items.length > 1 ? 's' : ''}</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                        <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
-                      </div>
-                      <div className="space-y-1">
-                        {items.map((t, i) => (
-                          <div key={i} className="flex items-center justify-between text-xs py-1">
-                            <span className="text-muted-foreground">{t.transactionDate || '—'}</span>
-                            <span className={`font-medium ${t.type === 'INCOME' ? 'text-success' : 'text-destructive'}`}>
-                              {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(Math.abs(t.amount))}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Import Modal */}
       {showImportModal && (
@@ -753,7 +580,9 @@ export default function FinancePage() {
               <h3 className="text-lg font-semibold">Importar Planilha</h3>
               <Button variant="ghost" size="icon" onClick={() => setShowImportModal(false)}><X className="h-4 w-4" /></Button>
             </div>
-            <div className="p-6"><FileUpload onImport={handleImportTransactions} /></div>
+            <div className="p-6">
+              <ImportCSV onImport={handleImportTransactions} onClose={() => setShowImportModal(false)} />
+            </div>
           </div>
         </div>
       )}
