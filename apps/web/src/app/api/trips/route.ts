@@ -46,6 +46,28 @@ export async function POST(request: NextRequest) {
   });
 }
 
+export async function PATCH(request: NextRequest) {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
+    const body = await request.json();
+    const parsed = updateTripSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
+    }
+
+    const { id, ...updates } = parsed.data;
+    const { data, error } = await supabase
+      .from('trips')
+      .update(updates)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, data });
+  });
+}
+
 export async function DELETE(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId, supabase}) => {
     const { searchParams } = new URL(request.url);
