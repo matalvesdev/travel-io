@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Trip, CreateTripRequest, FlightSearchResult, LocationResult } from '@travelio/shared';
+import type { Trip, CreateTripRequest, FlightSearchResult, LocationResult } from '@/types/shared';
 
 export type { Trip, CreateTripRequest, FlightSearchResult, LocationResult };
 

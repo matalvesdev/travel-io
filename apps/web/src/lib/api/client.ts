@@ -103,4 +103,4 @@ class ApiClient {
 
 export const apiClient = new ApiClient(API_BASE_URL);
 
-export type { ApiResponse } from '@travelio/shared';
+export type { ApiResponse } from '@/types/shared';

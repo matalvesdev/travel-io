@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Goal } from '@travelio/shared';
+import type { Goal } from '@/types/shared';
 
 export type { Goal };
 

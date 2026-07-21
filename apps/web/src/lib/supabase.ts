@@ -1,15 +1,84 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
+import type { NextRequest, NextResponse } from 'next/server';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Lazy Supabase client - only created when first accessed
+let _client: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function getClient(): SupabaseClient {
+  if (!_client) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) throw new Error('Supabase env vars not configured');
+    _client = createClient(url, key);
+  }
+  return _client;
+}
+
+// Export as a lazy proxy that delegates to the real client
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    const client = getClient();
+    const value = (client as any)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+});
 
 // Server-side client with service role key (for API routes)
 export function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!secretKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY not configured');
-  return createClient(supabaseUrl, secretKey);
+  if (!url || !secretKey) throw new Error('Supabase env vars not configured');
+  return createClient(url, secretKey);
+}
+
+// Server-side client with cookie support (for Route Handlers & Server Components)
+export function createServerClient(request: NextRequest, response: NextResponse) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  return createSupabaseServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+}
+
+// Browser-side client with cookie support
+export function createBrowserClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  return createSupabaseServerClient(url, key, {
+    cookies: {
+      getAll() {
+        const cookies: { name: string; value: string }[] = [];
+        if (typeof document !== 'undefined') {
+          document.cookie.split(';').forEach((c) => {
+            const [name, ...rest] = c.trim().split('=');
+            if (name) cookies.push({ name, value: rest.join('=') });
+          });
+        }
+        return cookies;
+      },
+      setAll(cookiesToSet) {
+        if (typeof document !== 'undefined') {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const cookieStr = `${name}=${value}; path=/; max-age=${options?.maxAge ?? 86400}; SameSite=Lax`;
+            document.cookie = cookieStr;
+          });
+        }
+      },
+    },
+  });
 }
 
 // Database types

@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Conversation, Message, SendMessageRequest } from '@travelio/shared';
+import type { Conversation, Message, SendMessageRequest } from '@/types/shared';
 
 export type { Conversation, Message, SendMessageRequest };
 

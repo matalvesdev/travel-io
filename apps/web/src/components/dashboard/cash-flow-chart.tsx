@@ -6,7 +6,12 @@ import { TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency, formatCompact } from '@/lib/utils/format';
-import type { CashFlowChartData } from '@travelio/shared';
+
+interface CashFlowChartData {
+  month: string;
+  income: number;
+  expenses: number;
+}
 
 interface CashFlowChartProps {
   data: CashFlowChartData[];

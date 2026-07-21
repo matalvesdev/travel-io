@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  return createClient(url, key);
+}
 
 const DEALS = [
   { product_name: 'iPhone 15 Pro Max 256GB', store_name: 'Apple Store', original_price: 9499, deal_price: 8499, savings: 1000, url: 'https://apple.com.br', is_active: true },
@@ -43,6 +46,7 @@ const COUPONS = [
 
 export async function POST() {
   try {
+    const supabase = getSupabase();
     const { error: dealsError } = await supabase.from('deals').insert(DEALS);
     const { error: couponsError } = await supabase.from('coupons').insert(COUPONS);
 

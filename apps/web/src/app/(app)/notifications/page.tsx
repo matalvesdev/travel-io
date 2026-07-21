@@ -48,7 +48,7 @@ export default function NotificationsPage() {
   const { data, isLoading, error } = useNotifications(filter);
   const markAsReadMutation = useMarkAsRead();
 
-  const notifications = data?.notifications || [];
+  const notifications: Notification[] = data?.notifications || [];
   const unreadCount = data?.unreadCount ?? 0;
 
   const handleMarkAsRead = async (id: string) => {

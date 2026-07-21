@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api';
@@ -37,6 +38,20 @@ export default function AppLayout({
       apiClient.setAccessToken(accessToken);
     }
   }, [accessToken]);
+
+  // Show loading spinner while hydrating
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -39,6 +39,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
 
+  const initials = React.useMemo(() => {
+    if (!user?.name) return 'U';
+    const parts = user.name.split(' ').filter(Boolean);
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : parts[0][0].toUpperCase();
+  }, [user?.name]);
+
   const handleLogout = async () => {
     await logout();
     router.push('/auth/login');
@@ -83,7 +91,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
             <div className="relative">
               <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-                <span className="text-sm font-semibold text-white">MB</span>
+                <span className="text-sm font-semibold text-white">{initials}</span>
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[hsl(0,0%,10%)] bg-success" />
             </div>

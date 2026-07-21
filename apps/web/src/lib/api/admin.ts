@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Plan, FeatureFlag, AuditLog } from '@travelio/shared';
+import type { Plan, FeatureFlag, AuditLog } from '@/types/shared';
 
 export type { Plan, FeatureFlag, AuditLog };
 

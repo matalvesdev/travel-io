@@ -1,5 +1,6 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Investment } from '@travelio/shared';
+import type { Investment } from '@/types/shared';
+import type { BrApiStockData } from '@/lib/api/brapi';
 
 export type { Investment };
 
@@ -19,6 +20,14 @@ export const investmentsApi = {
   createInvestment: (data: Partial<Investment>) =>
     apiClient.post<ApiResponse<{ id: string }>>('/api/investments', data),
 
+  updateInvestment: (id: string, data: Partial<Investment>) =>
+    apiClient.put<ApiResponse<{ id: string }>>('/api/investments', { id, ...data }),
+
   deleteInvestment: (id: string) =>
     apiClient.delete<ApiResponse<{ message: string }>>(`/api/investments?id=${id}`),
+
+  getQuotes: (symbols: string) =>
+    apiClient.get<{ results: BrApiStockData[] }>(`/api/brapi?symbols=${encodeURIComponent(symbols)}`),
 };
+
+export type { BrApiStockData } from '@/lib/api/brapi';

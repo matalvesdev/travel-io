@@ -53,11 +53,4 @@ export async function login(page: Page): Promise<void> {
   });
 }
 
-export const test = base.extend({
-  authenticatedPage: async ({ page }, use) => {
-    await login(page);
-    await use(page);
-  },
-});
-
-export { expect };
+export { base as test, expect };

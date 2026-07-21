@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Notification, NotificationPreference } from '@travelio/shared';
+import type { Notification, NotificationPreference } from '@/types/shared';
 
 export type { Notification, NotificationPreference };
 
