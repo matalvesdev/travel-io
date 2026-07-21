@@ -261,6 +261,7 @@ export default function FinancePage() {
   };
 
   const deleteSelected = () => {
+    if (!window.confirm('Tem certeza que deseja excluir as transações selecionadas?')) return;
     for (const id of selectedIds) {
       deleteTransaction.mutate(id);
     }
@@ -268,6 +269,7 @@ export default function FinancePage() {
   };
 
   const deleteSingle = (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta transação?')) return;
     deleteTransaction.mutate(id);
   };
 

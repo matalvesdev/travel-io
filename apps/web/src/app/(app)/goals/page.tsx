@@ -41,6 +41,7 @@ export default function GoalsPage() {
   };
 
   const handleDeleteGoal = (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta meta?')) return;
     deleteGoal.mutate(id);
   };
 

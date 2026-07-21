@@ -49,6 +49,7 @@ export default function TripsPage() {
   };
 
   const handleDeleteTrip = (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta viagem?')) return;
     deleteTripMutation.mutate(id, {
       onSuccess: () => {
         if (viewTrip?.id === id) setViewTrip(null);
