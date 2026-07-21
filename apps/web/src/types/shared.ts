@@ -200,6 +200,23 @@ export interface CreateInvestmentRequest {
   currency?: string;
 }
 
+export interface PortfolioMetrics {
+  totalInvested: number;
+  currentValue: number;
+  totalReturn: number;
+  returnPercentage: number;
+  allocation: Array<{ type: string; value: number; percentage: number; count: number }>;
+}
+
+export interface UpdateInvestmentRequest {
+  id: string;
+  ticker?: string;
+  name?: string;
+  type?: string;
+  quantity?: number;
+  avgCost?: number;
+}
+
 // === Travel ===
 export interface Trip {
   id: string;
