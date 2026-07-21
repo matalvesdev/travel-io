@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+import { prisma } from '@/lib/db';
 
 const createInvestmentSchema = z.object({
   ticker: z.string().min(1, 'Ticker é obrigatório'),
@@ -20,45 +21,47 @@ const updateInvestmentSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
 
-    let query = supabase
-      .from('investments')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    const data = await prisma.investment.findMany({
+      where: {
+        userId,
+        ...(type ? { type } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
 
-    if (type) query = query.eq('type', type);
-
-    const { data, error } = await query;
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data: { investments: data } });
   });
 }
 
 export async function POST(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
     const parsed = createInvestmentSchema.safeParse(body);
     if (!parsed.success) {
       return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('investments')
-      .insert({ ...parsed.data, user_id: userId })
-      .select()
-      .single();
+    const data = await prisma.investment.create({
+      data: {
+        ticker: parsed.data.ticker,
+        name: parsed.data.name ?? '',
+        type: parsed.data.type,
+        quantity: parsed.data.quantity,
+        avgCost: parsed.data.avgCost,
+        userId,
+      },
+    });
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data });
   });
 }
 
 export async function PATCH(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
     const parsed = updateInvestmentSchema.safeParse(body);
     if (!parsed.success) {
@@ -66,32 +69,28 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { id, ...updates } = parsed.data;
-    const { data, error } = await supabase
-      .from('investments')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const existing = await prisma.investment.findFirst({ where: { id, userId } });
+    if (!existing) {
+      return Response.json({ success: false, message: 'Investimento não encontrado' }, { status: 404 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    const data = await prisma.investment.update({ where: { id }, data: updates });
     return Response.json({ success: true, data });
   });
 }
 
 export async function DELETE(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
 
-    const { error } = await supabase
-      .from('investments')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+    const existing = await prisma.investment.findFirst({ where: { id, userId } });
+    if (!existing) {
+      return Response.json({ success: false, message: 'Investimento não encontrado' }, { status: 404 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    await prisma.investment.delete({ where: { id } });
     return Response.json({ success: true, message: 'Investimento excluído' });
   });
 }

@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@prisma/client": "^6.19.3",
     "@storybook/react": "^8.0.0",
     "@storybook/react-vite": "^8.0.0",
     "@tailwindcss/postcss": "^4.0.0",
@@ -67,6 +68,7 @@
     "postcss": "^8.4.0",
     "prettier": "^3.2.0",
     "prettier-plugin-tailwindcss": "^0.6.0",
+    "prisma": "^6.19.3",
     "storybook": "^8.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.4.0",
