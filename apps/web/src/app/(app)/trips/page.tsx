@@ -30,7 +30,7 @@ export default function TripsPage() {
   const deleteTripMutation = useDeleteTrip();
 
   const trips = data?.trips || [];
-  const totalSpent = trips.filter(t => t.status === 'completed').reduce((a, t) => a + (t.spent || t.totalCost), 0);
+  const totalSpent = trips.filter(t => t.status === 'completed').reduce((a, t) => a + (t.totalCost || 0), 0);
   const totalPlanned = trips.filter(t => t.status === 'planned').reduce((a, t) => a + t.totalCost, 0);
   const upcomingTrip = trips
     .filter(t => t.status !== 'completed')
@@ -238,9 +238,6 @@ export default function TripsPage() {
                   <div className="flex items-center gap-2 mb-3"><Wallet className="h-4 w-4 text-green-500" /><h4 className="font-semibold text-sm">Resumo Financeiro</h4></div>
                   <div className="space-y-2">
                     <div className="flex justify-between"><span className="text-sm text-muted-foreground">Custo total estimado</span><span className="text-sm font-bold text-primary">{formatCurrency(viewTrip.totalCost)}</span></div>
-                    {viewTrip.status === 'completed' && viewTrip.spent && viewTrip.spent !== viewTrip.totalCost && (
-                      <div className="flex justify-between"><span className="text-sm text-muted-foreground">Valor gasto real</span><span className={`text-sm font-bold ${viewTrip.spent < viewTrip.totalCost ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(viewTrip.spent)} {viewTrip.spent < viewTrip.totalCost ? `(economizou ${formatCurrency(viewTrip.totalCost - viewTrip.spent)})` : `(gastou mais ${formatCurrency(viewTrip.spent - viewTrip.totalCost)})`}</span></div>
-                    )}
                     <div className="flex justify-between"><span className="text-sm text-muted-foreground">Economia mensal (6 meses)</span><span className="text-sm font-medium">{formatCurrency(Math.ceil(viewTrip.totalCost / 6))}/mês</span></div>
                     <div className="flex justify-between"><span className="text-sm text-muted-foreground">Economia diária (30 dias)</span><span className="text-sm font-medium">{formatCurrency(Math.ceil(viewTrip.totalCost / 30))}/dia</span></div>
                   </div>

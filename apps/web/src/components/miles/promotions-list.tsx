@@ -58,7 +58,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
       <CardContent className="space-y-3">
         {promotions.map((promo) => {
           const color = PROGRAM_COLORS[promo.program] || '#6366f1';
-          const daysLeft = promo.daysRemaining;
+          const daysLeft = promo.validUntil ? Math.ceil((new Date(promo.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 30;
           const isUrgent = daysLeft <= 7;
 
           return (
@@ -74,7 +74,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${color}20`, color }}>
-                      {promo.programName || promo.program}
+                      {promo.program}
                     </span>
                     {promo.bonusPercentage > 0 && (
                       <span className="text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
@@ -87,29 +87,18 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
                     <p className="text-xs text-muted-foreground line-clamp-2">{promo.description}</p>
                   )}
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                    {promo.partner && (
-                      <span className="flex items-center gap-1">
-                        <Tag className="h-3 w-3" />
-                        {promo.partner}
-                      </span>
-                    )}
-                    {promo.category && (
-                      <span className="flex items-center gap-1">
-                        {CATEGORY_LABELS[promo.category] || promo.category}
-                      </span>
-                    )}
                     <span className={`flex items-center gap-1 ${isUrgent ? 'text-amber-600 font-medium' : ''}`}>
                       <Clock className="h-3 w-3" />
                       {daysLeft > 0 ? `${daysLeft} dias restantes` : 'Expira hoje'}
                     </span>
                   </div>
                 </div>
-                {promo.linkUrl && (
+                {promo.link && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="shrink-0"
-                    onClick={() => window.open(promo.linkUrl, '_blank')}
+                    onClick={() => window.open(promo.link, '_blank')}
                   >
                     <ExternalLink className="h-4 w-4" />
                   </Button>

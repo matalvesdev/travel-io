@@ -54,7 +54,7 @@ export function TransferModal({ isOpen, onClose, fromProgram }: TransferModalPro
   const handleTransfer = () => {
     if (!hasEnough || !numericAmount) return;
     transferMutation.mutate(
-      { from, to, amount: numericAmount },
+      { fromProgram: from, toProgram: to, miles: numericAmount },
       {
         onSuccess: () => {
           setAmount('');
