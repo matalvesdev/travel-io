@@ -71,3 +71,55 @@ export async function fetchBrApiQuote(symbol: string): Promise<BrApiStockData | 
   const results = await fetchBrApiQuotes(symbol);
   return results.length > 0 ? results[0] : null;
 }
+
+export interface BrApiNewsItem {
+  title: string;
+  source: string;
+  date: string;
+  url: string;
+  summary: string;
+}
+
+/**
+ * Fetch market news from BrAPI
+ * @param symbols - Optional comma-separated stock symbols for targeted news
+ * @returns Array of news items or empty array on error
+ */
+export async function fetchBrApiNews(symbols?: string): Promise<BrApiNewsItem[]> {
+  const token = process.env.BRAPI_TOKEN;
+  if (!token) {
+    console.warn('BRAPI_TOKEN not configured');
+    return [];
+  }
+
+  const url = symbols
+    ? `https://brapi.dev/api/v2/stocks/news?symbols=${encodeURIComponent(symbols)}&token=${token}`
+    : `https://brapi.dev/api/v1/news?token=${token}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`BrAPI news error: HTTP ${response.status}`);
+      return [];
+    }
+
+    const raw = await response.json();
+    const items = raw.news || raw.data || raw.results || [];
+
+    return items.map((item: any) => ({
+      title: item.title || item.headline || 'Notícia',
+      source: item.source || item.publisher || 'BrAPI',
+      date: item.publishedAt || item.createdAt || item.date || new Date().toISOString(),
+      url: item.url || item.link || '#',
+      summary: item.summary || item.description || '',
+    }));
+  } catch (error) {
+    console.error('BrAPI news fetch error:', error);
+    return [];
+  }
+}
