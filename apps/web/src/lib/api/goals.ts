@@ -1,5 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
-import type { Goal } from '@/types/shared';
+import type { Goal, AddGoalProgressRequest } from '@/types/shared';
 
 export type { Goal };
 
@@ -23,4 +23,7 @@ export const goalsApi = {
 
   deleteGoal: (id: string) =>
     apiClient.delete<ApiResponse<{ message: string }>>(`/api/goals?id=${id}`),
+
+  addProgress: (data: AddGoalProgressRequest) =>
+    apiClient.post<ApiResponse<{ success: boolean }>>('/api/goals/progress', data),
 };
