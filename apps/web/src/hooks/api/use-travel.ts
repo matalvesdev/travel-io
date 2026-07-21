@@ -92,7 +92,7 @@ export function useHotelSearch(params: { destination: string; checkIn: string; c
 
 export function useLocationSearch(query: string) {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     timerRef.current = setTimeout(() => setDebouncedQuery(query), 300);

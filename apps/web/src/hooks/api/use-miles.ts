@@ -36,7 +36,7 @@ export function useUpdateAccount() {
 export function useTransferMiles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { from: string; to: string; amount: number }) =>
+    mutationFn: (data: { fromProgram: string; toProgram: string; miles: number }) =>
       milesApi.transferMiles(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milesBalance'] });
