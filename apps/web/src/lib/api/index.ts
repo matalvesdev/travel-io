@@ -10,7 +10,7 @@ export { travelApi } from './travel';
 export type { Trip, CreateTripRequest, FlightSearchResult, LocationResult } from './travel';
 
 export { milesApi } from './miles';
-export type { MilesAccount, MilesBalanceResponse } from './miles';
+export type { MilesAccount, MilesBalanceResponse, MilesPromotion } from './miles';
 
 export { shoppingApi } from './shopping';
 export type { Deal, Coupon, ShoppingWishlistItem } from './shopping';
