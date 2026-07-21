@@ -8,373 +8,255 @@ datasource db {
 }
 
 model Profile {
-  id        String   @id
+  id        String   @id @default(uuid()) @db.Uuid
   name      String?
   email     String?
   phone     String?
   birthDate DateTime? @map("birth_date")
   avatarUrl String?  @map("avatar_url")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-
-  transactions         Transaction[]
-  investments          Investment[]
-  goals                Goal[]
-  trips                Trip[]
-  milesAccounts        MilesAccount[]
-  milesTransactions    MilesTransaction[]
-  wishlistItems        WishlistItem[]
-  priceMonitors        PriceMonitor[]
-  priceAlerts          PriceAlert[]
-  notifications        Notification[]
-  notificationPref     NotificationPreference?
-  aiConversations      AiConversation[]
-  userSessions         UserSession[]
-  paymentMethods       PaymentMethod[]
-  auditLogs            AuditLog[]
-
+  updatedAt DateTime @updatedAt @map("updated_at")
   @@map("profiles")
 }
 
 model Transaction {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String   @map("user_id") @db.Uuid
-  type             String
-  amount           Decimal  @db.Decimal(12, 2)
-  description      String
-  category         String   @default("Outros")
-  date             DateTime @db.Date
-  month            String?  @default(dbgenerated("to_char(date, 'MM')"))
-  year             String?  @default(dbgenerated("to_char(date, 'YYYY')"))
-  method           String?
-  installmentCurrent Int?   @map("installment_current")
-  installmentTotal   Int?   @map("installment_total")
-  createdAt        DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([date(sort: Desc)])
-  @@index([userId, category])
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  type               String
+  amount             Decimal   @db.Decimal(12, 2)
+  description        String?
+  category           String?
+  date               DateTime
+  method             String?
+  installmentCurrent Int?      @map("installment_current")
+  installmentTotal   Int?      @map("installment_total")
+  createdAt          DateTime  @default(now()) @map("created_at")
   @@map("transactions")
 }
 
 model Investment {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
+  id           String  @id @default(uuid()) @db.Uuid
+  userId       String  @map("user_id") @db.Uuid
   type         String
   ticker       String
   name         String
-  quantity     Decimal  @default(0) @db.Decimal(12, 4)
-  avgCost      Decimal  @default(0) @map("avg_cost") @db.Decimal(12, 2)
-  currentPrice Decimal  @default(0) @map("current_price") @db.Decimal(12, 2)
-  amount       Decimal  @default(0) @db.Decimal(12, 2)
+  quantity     Decimal @db.Decimal(12, 4)
+  avgCost      Decimal @map("avg_cost") @db.Decimal(12, 2)
+  currentPrice Decimal @map("current_price") @db.Decimal(12, 2)
+  amount       Decimal @db.Decimal(12, 2)
   createdAt    DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
   @@map("investments")
 }
 
 model Goal {
-  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                   String   @id @default(uuid()) @db.Uuid
   userId               String   @map("user_id") @db.Uuid
   name                 String
   targetAmount         Decimal  @map("target_amount") @db.Decimal(12, 2)
-  currentAmount        Decimal  @default(0) @map("current_amount") @db.Decimal(12, 2)
+  currentAmount        Decimal  @map("current_amount") @db.Decimal(12, 2) @default(0)
   monthlyContribution  Decimal? @map("monthly_contribution") @db.Decimal(12, 2)
   type                 String?
   priority             String?
   status               String   @default("in_progress")
-  createdAt            DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
   @@map("goals")
 }
 
 model Trip {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
   destination String
-  startDate DateTime @db.Date @map("start_date")
-  endDate   DateTime @db.Date @map("end_date")
-  budget    Decimal? @db.Decimal(12, 2)
-  status    String   @default("planned")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alerts PriceAlert[]
-
-  @@index([userId])
-  @@index([userId, status])
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  budget      Decimal? @db.Decimal(12, 2)
+  status      String   @default("planned")
+  createdAt   DateTime @default(now()) @map("created_at")
   @@map("trips")
 }
 
 model MilesAccount {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String   @map("user_id") @db.Uuid
-  program         String
-  balance         Decimal  @default(0) @db.Decimal(12, 2)
-  expiringIn30Days Decimal @default(0) @map("expiring_in_30_days") @db.Decimal(12, 2)
-  expiringDate    DateTime? @db.Date @map("expiring_date")
-  updatedAt       DateTime @default(now()) @map("updated_at")
-
-  user         Profile           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions MilesTransaction[]
-
-  @@index([userId])
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  program          String
+  balance          Decimal  @db.Decimal(12, 2)
+  expiringIn30Days Decimal? @map("expiring_in_30_days") @db.Decimal(12, 2)
+  expiringDate     DateTime? @map("expiring_date")
+  updatedAt        DateTime @updatedAt @map("updated_at")
   @@map("miles")
 }
 
 model MilesTransaction {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  milesId     String?  @map("miles_id") @db.Uuid
-  date        DateTime @default(now()) @db.Date
-  amount      Decimal  @db.Decimal(12, 2)
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  milesId   String?  @map("miles_id") @db.Uuid
+  date      DateTime
+  amount    Decimal  @db.Decimal(12, 2)
   description String?
-  type        String?
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  user  Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  miles MilesAccount? @relation(fields: [milesId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
+  type      String?
   @@map("miles_transactions")
 }
 
 model Deal {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productName   String   @map("product_name")
-  storeName     String   @map("store_name")
-  originalPrice Decimal? @map("original_price") @db.Decimal(10, 2)
-  dealPrice     Decimal? @map("deal_price") @db.Decimal(10, 2)
-  savings       Decimal? @db.Decimal(10, 2)
+  id            String  @id @default(uuid()) @db.Uuid
+  productName   String  @map("product_name")
+  storeName     String  @map("store_name")
+  originalPrice Decimal @map("original_price") @db.Decimal(12, 2)
+  dealPrice     Decimal @map("deal_price") @db.Decimal(12, 2)
+  savings       Decimal @db.Decimal(12, 2)
   url           String?
   category      String?
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  @@index([isActive])
-  @@index([category])
+  isActive      Boolean @default(true) @map("is_active")
   @@map("deals")
 }
 
 model Coupon {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeName    String   @map("store_name")
-  code         String?
-  description  String?
-  value        Decimal? @db.Decimal(10, 2)
-  minPurchase  Decimal? @map("min_purchase") @db.Decimal(10, 2)
-  startDate    DateTime? @db.Date @map("start_date")
-  endDate      DateTime? @db.Date @map("end_date")
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@index([isActive])
-  @@index([storeName])
+  id          String   @id @default(uuid()) @db.Uuid
+  storeName   String   @map("store_name")
+  code        String
+  description String?
+  value       Decimal? @db.Decimal(12, 2)
+  minPurchase Decimal? @map("min_purchase") @db.Decimal(12, 2)
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isActive    Boolean  @default(true) @map("is_active")
   @@map("coupons")
 }
 
 model WishlistItem {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  name         String
-  store        String?
-  currentPrice Decimal? @map("current_price") @db.Decimal(10, 2)
-  targetPrice  Decimal? @map("target_price") @db.Decimal(10, 2)
-  url          String?
-  monitorPrice Boolean  @default(false) @map("monitor_price")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  name          String
+  store         String?
+  currentPrice  Decimal? @map("current_price") @db.Decimal(12, 2)
+  targetPrice   Decimal? @map("target_price") @db.Decimal(12, 2)
+  url           String?
+  monitorPrice  Boolean  @default(false) @map("monitor_price")
   @@map("wishlist_items")
 }
 
 model PriceMonitor {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  productName  String   @map("product_name")
-  url          String?
-  targetPrice  Decimal? @map("target_price") @db.Decimal(10, 2)
-  currentPrice Decimal? @map("current_price") @db.Decimal(10, 2)
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  productName   String   @map("product_name")
+  url           String?
+  targetPrice   Decimal? @map("target_price") @db.Decimal(12, 2)
+  currentPrice  Decimal? @map("current_price") @db.Decimal(12, 2)
+  isActive      Boolean  @default(true) @map("is_active")
   @@map("price_monitors")
 }
 
 model PriceAlert {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  name         String
-  type         String   @default("flight")
-  origin       String?
-  destination  String
-  checkin      DateTime? @db.Date
-  checkout     DateTime? @db.Date
-  store        String   @default("all")
-  currentPrice Decimal  @default(0) @map("current_price") @db.Decimal(10, 2)
-  targetPrice  Decimal  @default(0) @map("target_price") @db.Decimal(10, 2)
-  history      Json     @default("[]")
-  active       Boolean  @default(true)
-  tripId       String?  @map("trip_id") @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  user  Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trip  Trip?    @relation(fields: [tripId], references: [id])
-
-  @@index([userId])
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String?
+  type        String   @default("flight")
+  origin      String?
+  destination String?
+  checkin     DateTime?
+  checkout    DateTime?
+  store       String?
+  currentPrice Decimal? @map("current_price") @db.Decimal(12, 2)
+  targetPrice Decimal?  @map("target_price") @db.Decimal(12, 2)
+  history     Json?
+  active      Boolean  @default(true)
+  tripId      String?  @map("trip_id") @db.Uuid
   @@map("price_alerts")
 }
 
 model Notification {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
-  type      String   @default("info")
-  title     String
+  type      String?
+  title     String?
   body      String?
   read      Boolean  @default(false)
   alertId   String?  @map("alert_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, read])
   @@map("notifications")
 }
 
 model NotificationPreference {
-  userId            String    @id @map("user_id") @db.Uuid
-  pushEnabled       Boolean   @default(true) @map("push_enabled")
-  emailEnabled      Boolean   @default(true) @map("email_enabled")
-  smsEnabled        Boolean   @default(false) @map("sms_enabled")
-  whatsappEnabled   Boolean   @default(false) @map("whatsapp_enabled")
-  telegramEnabled   Boolean   @default(false) @map("telegram_enabled")
-  budgetAlerts      Boolean   @default(true) @map("budget_alerts")
-  priceAlerts       Boolean   @default(true) @map("price_alerts")
-  travelDeals       Boolean   @default(true) @map("travel_deals")
-  goalReminders     Boolean   @default(true) @map("goal_reminders")
-  quietHoursEnabled Boolean   @default(false) @map("quiet_hours_enabled")
-  quietHoursStart   Int       @default(22) @map("quiet_hours_start")
-  quietHoursEnd     Int       @default(8) @map("quiet_hours_end")
-  updatedAt         DateTime  @default(now()) @map("updated_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  userId            String   @id @map("user_id") @db.Uuid
+  pushEnabled       Boolean  @default(true) @map("push_enabled")
+  emailEnabled      Boolean  @default(true) @map("email_enabled")
+  smsEnabled        Boolean  @default(false) @map("sms_enabled")
+  whatsappEnabled   Boolean  @default(false) @map("whatsapp_enabled")
+  telegramEnabled   Boolean  @default(false) @map("telegram_enabled")
+  budgetAlerts      Boolean  @default(true) @map("budget_alerts")
+  priceAlerts       Boolean  @default(true) @map("price_alerts")
+  travelDeals       Boolean  @default(true) @map("travel_deals")
+  goalReminders     Boolean  @default(true) @map("goal_reminders")
+  quietHoursEnabled Boolean  @default(false) @map("quiet_hours_enabled")
+  quietHoursStart   Int?     @map("quiet_hours_start")
+  quietHoursEnd     Int?     @map("quiet_hours_end")
   @@map("notification_preferences")
 }
 
 model AiConversation {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
   title     String   @default("Nova conversa")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-
-  user     Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages AiMessage[]
-
-  @@index([userId])
+  updatedAt DateTime @updatedAt @map("updated_at")
   @@map("ai_conversations")
 }
 
 model AiMessage {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  conversationId String   @map("conversation_id") @db.Uuid
+  id             String @id @default(uuid()) @db.Uuid
+  conversationId String @map("conversation_id") @db.Uuid
   role           String
   content        String
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  @@index([conversationId])
   @@map("ai_messages")
 }
 
 model FeatureFlag {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key         String   @unique
-  value       Json     @default("true")
+  id          String @id @default(uuid()) @db.Uuid
+  key         String @unique
+  value       Json?
   description String?
-  createdAt   DateTime @default(now()) @map("created_at")
-
   @@map("feature_flags")
 }
 
 model AuditLog {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   userId    String?  @map("user_id") @db.Uuid
-  action    String
+  action    String?
   details   Json?
   ipAddress String?  @map("ip_address")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([createdAt(sort: Desc)])
-  @@index([userId])
   @@map("audit_logs")
 }
 
 model Plan {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  slug         String   @unique
-  description  String?
-  price        Decimal  @db.Decimal(10, 2)
-  priceMonthly Decimal? @map("price_monthly") @db.Decimal(10, 2)
-  priceYearly  Decimal? @map("price_yearly") @db.Decimal(10, 2)
-  currency     String   @default("BRL")
-  features     Json?
-  isPopular    Boolean  @default(false) @map("is_popular")
-  createdAt    DateTime @default(now()) @map("created_at")
-
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String  @unique
+  description String?
+  price       Decimal? @db.Decimal(12, 2)
+  features    Json?
+  isPopular   Boolean @default(false) @map("is_popular")
   @@map("plans")
 }
 
 model UserSession {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String    @map("user_id") @db.Uuid
-  deviceType   String?   @map("device_type")
-  userAgent    String?   @map("user_agent")
-  ipAddress    String?   @map("ip_address")
-  lastActiveAt DateTime  @default(now()) @map("last_active_at")
-  expiresAt    DateTime? @map("expires_at")
-  active       Boolean   @default(true)
-  createdAt    DateTime  @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, active])
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  deviceType     String?   @map("device_type")
+  userAgent      String?   @map("user_agent")
+  ipAddress      String?   @map("ip_address")
+  lastActiveAt   DateTime? @map("last_active_at")
+  expiresAt      DateTime? @map("expires_at")
+  active         Boolean   @default(true)
   @@map("user_sessions")
 }
 
 model PaymentMethod {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  type        String   @default("card")
-  last4       String
-  brand       String
-  expiryMonth Int?     @map("expiry_month")
-  expiryYear  Int?     @map("expiry_year")
-  holderName  String?  @map("holder_name")
-  isDefault   Boolean  @default(false) @map("is_default")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         String?
+  last4        String?
+  brand        String?
+  expiryMonth  Int?     @map("expiry_month")
+  expiryYear   Int?     @map("expiry_year")
+  holderName   String?  @map("holder_name")
+  isDefault    Boolean  @default(false) @map("is_default")
   @@map("payment_methods")
 }

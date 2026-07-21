@@ -1,86 +1,104 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+import { prisma } from '@/lib/db';
+
+const createTripSchema = z.object({
+  destination: z.string().min(1, 'Destino é obrigatório'),
+  startDate: z.string().min(1, 'Data de início é obrigatória'),
+  endDate: z.string().min(1, 'Data de término é obrigatória'),
+  budget: z.number().positive('Orçamento deve ser maior que 0').optional(),
+  status: z.string().optional(),
+});
 
 const updateTripSchema = z.object({
   id: z.string().min(1, 'ID é obrigatório'),
   status: z.string().optional(),
-  name: z.string().optional(),
   destination: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  notes: z.string().optional(),
-  totalCost: z.number().optional(),
+  budget: z.number().optional(),
 });
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    let query = supabase
-      .from('trips')
-      .select('*')
-      .eq('user_id', userId)
-      .order('start_date', { ascending: false });
+    const data = await prisma.trip.findMany({
+      where: {
+        userId,
+        ...(status ? { status } : {}),
+      },
+      orderBy: { startDate: 'desc' },
+    });
 
-    if (status) query = query.eq('status', status);
-
-    const { data, error } = await query;
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data: { trips: data } });
   });
 }
 
 export async function POST(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
-    const { data, error } = await supabase
-      .from('trips')
-      .insert({ ...body, user_id: userId })
-      .select()
-      .single();
+    const parsed = createTripSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    const data = await prisma.trip.create({
+      data: {
+        destination: parsed.data.destination,
+        startDate: new Date(parsed.data.startDate),
+        endDate: new Date(parsed.data.endDate),
+        budget: parsed.data.budget ?? null,
+        status: parsed.data.status ?? 'planned',
+        userId,
+      },
+    });
+
     return Response.json({ success: true, data });
   });
 }
 
 export async function PATCH(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
     const parsed = updateTripSchema.safeParse(body);
     if (!parsed.success) {
       return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    const { id, ...updates } = parsed.data;
-    const { data, error } = await supabase
-      .from('trips')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const { id, startDate, endDate, ...rest } = parsed.data;
+    const existing = await prisma.trip.findFirst({ where: { id, userId } });
+    if (!existing) {
+      return Response.json({ success: false, message: 'Viagem não encontrada' }, { status: 404 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    const data = await prisma.trip.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(startDate ? { startDate: new Date(startDate) } : {}),
+        ...(endDate ? { endDate: new Date(endDate) } : {}),
+      },
+    });
+
     return Response.json({ success: true, data });
   });
 }
 
 export async function DELETE(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
 
-    const { error } = await supabase
-      .from('trips')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+    const existing = await prisma.trip.findFirst({ where: { id, userId } });
+    if (!existing) {
+      return Response.json({ success: false, message: 'Viagem não encontrada' }, { status: 404 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    await prisma.trip.delete({ where: { id } });
     return Response.json({ success: true, message: 'Viagem excluída' });
   });
 }
