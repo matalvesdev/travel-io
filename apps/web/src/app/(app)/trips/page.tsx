@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/utils';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { useTrips, useUpdateTrip, useDeleteTrip } from '@/hooks/api/use-travel';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import type { Trip } from '@/types/shared';
 
 const STATUS_CONFIG = {
@@ -19,6 +20,7 @@ const STATUS_CONFIG = {
 const STATUS_MAP = STATUS_CONFIG as Record<string, typeof STATUS_CONFIG[keyof typeof STATUS_CONFIG]>;
 
 export default function TripsPage() {
+  const router = useRouter();
   const [filter, setFilter] = React.useState<'all' | 'planned' | 'ongoing' | 'completed'>('all');
   const [viewTrip, setViewTrip] = React.useState<Trip | null>(null);
 
@@ -77,7 +79,7 @@ export default function TripsPage() {
           <h1 className="text-3xl font-bold">Minhas Viagens</h1>
           <p className="text-muted-foreground">{trips.length} viagem{trips.length !== 1 ? 'ens' : ''} registrada{trips.length !== 1 ? 's' : ''}</p>
         </div>
-        <Button onClick={() => window.location.href = '/travel'} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"><Plus className="mr-2 h-4 w-4" /> Nova Viagem</Button>
+        <Button onClick={() => router.push('/travel')} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"><Plus className="mr-2 h-4 w-4" /> Nova Viagem</Button>
       </div>
 
       {/* Stats */}
@@ -142,7 +144,7 @@ export default function TripsPage() {
           <Map className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
           <p className="text-lg font-semibold text-muted-foreground mb-2">Nenhuma viagem encontrada</p>
           <p className="text-sm text-muted-foreground mb-4">{filter === 'all' ? 'Comece planejando sua primeira viagem!' : `Nenhuma viagem com status "${STATUS_MAP[filter]?.label || filter}"`}</p>
-          <Button onClick={() => window.location.href = '/travel'}><Search className="mr-2 h-4 w-4" /> Planejar Viagem</Button>
+          <Button onClick={() => router.push('/travel')}><Search className="mr-2 h-4 w-4" /> Planejar Viagem</Button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

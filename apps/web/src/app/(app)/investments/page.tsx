@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { toast } from 'sonner';
 import { formatCurrency, formatPercent } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   usePortfolio,
   useCreateInvestment,
@@ -73,6 +74,7 @@ function SimpleBarChart({ data }: { data: { label: string; value: number; color:
 }
 
 export default function InvestmentsPage() {
+  const queryClient = useQueryClient();
   const { data: portfolioData, isLoading } = usePortfolio();
   const createInvestment = useCreateInvestment();
   const updateInvestment = useUpdateInvestment();
@@ -347,7 +349,7 @@ export default function InvestmentsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.location.reload()}
+            onClick={() => queryClient.invalidateQueries()}
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
