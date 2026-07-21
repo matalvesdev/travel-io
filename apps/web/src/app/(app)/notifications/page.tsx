@@ -5,7 +5,7 @@ import { Bell, Check, CheckCheck, Loader2, Filter, Mail, Smartphone, MessageSqua
 import { Button } from '@/components/ui/button';
 import { useNotifications, useMarkAsRead } from '@/hooks/api/use-notifications';
 import type { Notification } from '@/lib/api/notifications';
-import { Toast } from '@/components/ui/toast';
+import { toast } from 'sonner';
 
 const channelIcons: Record<string, React.ReactNode> = {
   PUSH: <Bell className="h-4 w-4" />,
@@ -43,7 +43,6 @@ function formatRelativeTime(dateStr: string): string {
 
 export default function NotificationsPage() {
   const [filter, setFilter] = React.useState<'ALL' | 'UNREAD' | 'READ'>('ALL');
-  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const { data, isLoading, error } = useNotifications(filter);
   const markAsReadMutation = useMarkAsRead();
@@ -55,19 +54,16 @@ export default function NotificationsPage() {
     try {
       await markAsReadMutation.mutateAsync(id);
     } catch {
-      setToast({ message: 'Erro ao marcar como lida', type: 'error' });
-      setTimeout(() => setToast(null), 3000);
+      toast.error('Erro ao marcar como lida');
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       notifications.forEach(n => { if (!n.isRead) markAsReadMutation.mutateAsync(n.id); });
-      setToast({ message: 'Todas marcadas como lidas', type: 'success' });
-      setTimeout(() => setToast(null), 3000);
+      toast.success('Todas marcadas como lidas');
     } catch {
-      setToast({ message: 'Erro ao marcar todas como lidas', type: 'error' });
-      setTimeout(() => setToast(null), 3000);
+      toast.error('Erro ao marcar todas como lidas');
     }
   };
 
@@ -94,8 +90,6 @@ export default function NotificationsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Notificações</h1>

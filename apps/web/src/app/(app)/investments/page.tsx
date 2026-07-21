@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MetricCard } from '@/components/analytics/metric-card';
-import { Toast } from '@/components/ui/toast';
+import { toast } from 'sonner';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import {
   usePortfolio,
@@ -113,12 +113,6 @@ export default function InvestmentsPage() {
     price: '',
   });
   const [filterType, setFilterType] = React.useState('all');
-  const [toast, setToast] = React.useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
-  const showToast = (m: string, t: 'success' | 'error' = 'success') =>
-    setToast({ message: m, type: t });
 
   const portfolio = React.useMemo(() => {
     const totalInvested = investments.reduce(
@@ -187,25 +181,25 @@ export default function InvestmentsPage() {
     try {
       if (editItem) {
         await updateInvestment.mutateAsync({ ...data, id: editItem.id } as any);
-        showToast('Ativo atualizado!');
+        toast.success('Ativo atualizado!');
       } else {
         await createInvestment.mutateAsync(data);
-        showToast('Ativo adicionado!');
+        toast.success('Ativo adicionado!');
       }
       setShowAddModal(false);
       setEditItem(null);
       setForm({ ticker: '', name: '', type: 'STOCK', quantity: '', price: '' });
     } catch {
-      showToast('Erro ao salvar', 'error');
+      toast.error('Erro ao salvar');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await deleteInvestment.mutateAsync(id);
-      showToast('Ativo removido!');
+      toast.success('Ativo removido!');
     } catch {
-      showToast('Erro ao remover', 'error');
+      toast.error('Erro ao remover');
     }
   };
 
@@ -341,16 +335,6 @@ export default function InvestmentsPage() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <AnimatePresence>
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

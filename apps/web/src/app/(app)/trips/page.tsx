@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { useTrips, useUpdateTrip, useDeleteTrip } from '@/hooks/api/use-travel';
+import { toast } from 'sonner';
 import type { Trip } from '@/types/shared';
 
 const STATUS_CONFIG = {
@@ -20,11 +21,6 @@ const STATUS_MAP = STATUS_CONFIG as Record<string, typeof STATUS_CONFIG[keyof ty
 export default function TripsPage() {
   const [filter, setFilter] = React.useState<'all' | 'planned' | 'ongoing' | 'completed'>('all');
   const [viewTrip, setViewTrip] = React.useState<Trip | null>(null);
-  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const showToast = (m: string, t: 'success' | 'error' = 'success') => {
-    setToast({ message: m, type: t });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const { data, isLoading } = useTrips(filter === 'all' ? undefined : filter);
   const updateTripMutation = useUpdateTrip();
@@ -42,10 +38,10 @@ export default function TripsPage() {
       { id, data: { status: newStatus } },
       {
         onSuccess: () => {
-          showToast(`Status alterado para "${STATUS_MAP[newStatus]?.label || newStatus}"`);
+          toast.success(`Status alterado para "${STATUS_MAP[newStatus]?.label || newStatus}"`);
           if (viewTrip?.id === id) setViewTrip({ ...viewTrip!, status: newStatus });
         },
-        onError: () => showToast('Erro ao alterar status', 'error'),
+        onError: () => toast.error('Erro ao alterar status'),
       }
     );
   };
@@ -54,9 +50,9 @@ export default function TripsPage() {
     deleteTripMutation.mutate(id, {
       onSuccess: () => {
         if (viewTrip?.id === id) setViewTrip(null);
-        showToast('Viagem removida');
+        toast.success('Viagem removida');
       },
-      onError: () => showToast('Erro ao remover', 'error'),
+      onError: () => toast.error('Erro ao remover'),
     });
   };
 
@@ -75,15 +71,6 @@ export default function TripsPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-5xl mx-auto">
-      <AnimatePresence>
-        {toast && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-sm font-medium ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-destructive text-white'}`}>
-            {toast.type === 'success' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}{toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -259,7 +246,7 @@ export default function TripsPage() {
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full rounded-xl" onClick={() => { navigator.clipboard.writeText(`Viagem: ${viewTrip.name || viewTrip.destination}\n${viewTrip.startDate} a ${viewTrip.endDate}\nTotal: ${formatCurrency(viewTrip.totalCost)}`); showToast('Copiado!'); }}>
+                  <Button variant="outline" className="w-full rounded-xl" onClick={() => { navigator.clipboard.writeText(`Viagem: ${viewTrip.name || viewTrip.destination}\n${viewTrip.startDate} a ${viewTrip.endDate}\nTotal: ${formatCurrency(viewTrip.totalCost)}`); toast.success('Copiado!'); }}>
                     <Bookmark className="mr-2 h-4 w-4" /> Compartilhar
                   </Button>
                   <Button variant="outline" className="w-full rounded-xl text-destructive hover:bg-destructive/10" onClick={() => handleDeleteTrip(viewTrip.id)}>
