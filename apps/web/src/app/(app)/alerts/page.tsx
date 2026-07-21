@@ -17,7 +17,8 @@ function calcTrend(history: { price: number; date: string }[]) {
   const prev = history[history.length - 2].price;
   const change = last - prev;
   const changePct = prev > 0 ? (change / prev) * 100 : 0;
-  return { direction: (change > 0 ? 'up' : change < 0 ? 'down' : 'stable') as const, change, changePct };
+  const direction = change > 0 ? 'up' : change < 0 ? 'down' : 'stable';
+  return { direction, change, changePct };
 }
 
 export default function AlertsPage() {
