@@ -4,6 +4,7 @@ import * as React from 'react';
 import { TrendingDown, ExternalLink, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface PriceOption {
   store: string;
@@ -83,12 +84,4 @@ export function PriceComparison({ productName, options, onSelect }: PriceCompari
       </CardContent>
     </Card>
   );
-}
-
-function cn(...classes: (string | undefined | false)[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }

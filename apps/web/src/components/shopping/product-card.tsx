@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Heart, ExternalLink, TrendingDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/utils';
 
 interface Product {
   id: string;
@@ -89,8 +90,4 @@ export function ProductCard({ product, onAdd, onCompare }: ProductCardProps) {
       </CardContent>
     </Card>
   );
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
