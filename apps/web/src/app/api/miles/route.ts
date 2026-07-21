@@ -1,69 +1,63 @@
 import { NextRequest } from 'next/server';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const program = searchParams.get('program');
 
-    let query = supabase
-      .from('miles')
-      .select('*')
-      .eq('user_id', userId)
-      .order('updated_at', { ascending: false });
-
-    if (program) query = query.eq('program', program);
-
-    const [milesResult, transactionsResult] = await Promise.all([
-      query,
-      supabase
-        .from('miles_transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false })
-        .limit(50),
+    const [programs, transactions] = await Promise.all([
+      prisma.milesAccount.findMany({
+        where: {
+          userId,
+          ...(program ? { program } : {}),
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.milesTransaction.findMany({
+        where: { userId },
+        orderBy: { date: 'desc' },
+        take: 50,
+      }),
     ]);
-
-    if (milesResult.error) return Response.json({ success: false, message: milesResult.error.message }, { status: 500 });
 
     return Response.json({
       success: true,
-      data: {
-        programs: milesResult.data,
-        transactions: transactionsResult.data || [],
-      }});
+      data: { programs, transactions },
+    });
   });
 }
 
 export async function POST(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
-    const { data, error } = await supabase
-      .from('miles')
-      .insert({ ...body, user_id: userId })
-      .select()
-      .single();
+    const data = await prisma.milesAccount.create({
+      data: {
+        program: body.program,
+        balance: body.balance ?? 0,
+        expiringIn30Days: body.expiring_in_30_days ?? 0,
+        expiringDate: body.expiring_date ? new Date(body.expiring_date) : null,
+        userId,
+      },
+    });
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data });
   });
 }
 
 export async function PATCH(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
     const { id, ...updates } = body;
     if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
 
-    const { data, error } = await supabase
-      .from('miles')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const existing = await prisma.milesAccount.findFirst({ where: { id, userId } });
+    if (!existing) {
+      return Response.json({ success: false, message: 'Conta de milhas não encontrada' }, { status: 404 });
+    }
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    const data = await prisma.milesAccount.update({ where: { id }, data: updates });
     return Response.json({ success: true, data });
   });
 }

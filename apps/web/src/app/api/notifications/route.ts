@@ -1,49 +1,51 @@
 import { NextRequest } from 'next/server';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'ALL';
 
-    let query = supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    const where: Record<string, unknown> = { userId };
+    if (filter === 'UNREAD') where.read = false;
+    else if (filter === 'READ') where.read = true;
 
-    if (filter === 'UNREAD') query = query.eq('read', false);
-    else if (filter === 'READ') query = query.eq('read', true);
+    const data = await prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
 
-    const { data, error } = await query;
-
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
-
-    const notifications = (data || []).map((n: any) => ({
+    const notifications = data.map((n) => ({
       id: n.id,
       type: n.type || 'info',
       title: n.title,
       body: n.body,
-      read: n.read || false,
-      createdAt: n.created_at}));
+      read: n.read,
+      createdAt: n.createdAt,
+    }));
 
-    const unreadCount = notifications.filter((n: any) => !n.read).length;
+    const unreadCount = notifications.filter((n) => !n.read).length;
 
     return Response.json({ success: true, data: { notifications, unreadCount } });
   });
 }
 
 export async function POST(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase}) => {
+  return authenticatedHandler(request, async ({ userId }) => {
     const body = await request.json();
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert({ ...body, user_id: userId, read: false })
-      .select()
-      .single();
+    const data = await prisma.notification.create({
+      data: {
+        type: body.type ?? 'info',
+        title: body.title,
+        body: body.body ?? null,
+        read: false,
+        alertId: body.alert_id ?? null,
+        userId,
+      },
+    });
 
-    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data });
   });
 }

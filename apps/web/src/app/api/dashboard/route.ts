@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+import { prisma } from '@/lib/db';
 
 interface CategoryChartData {
   name: string;
@@ -15,42 +16,51 @@ interface CashFlowChartData {
 }
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId, supabase }) => {
-    const [transactionsRes, investmentsRes, goalsRes, tripsRes] = await Promise.all([
-      supabase.from('transactions').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }),
-      supabase.from('investments').select('quantity,avg_cost,current_price').eq('user_id', userId),
-      supabase.from('goals').select('current_amount,target_amount,status').eq('user_id', userId),
-      supabase.from('trips').select('id,status').eq('user_id', userId),
+  return authenticatedHandler(request, async ({ userId }) => {
+    const [transactions, investments, goals, trips] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId },
+        orderBy: { date: 'desc' },
+      }),
+      prisma.investment.findMany({
+        where: { userId },
+        select: { quantity: true, avgCost: true, currentPrice: true },
+      }),
+      prisma.goal.findMany({
+        where: { userId },
+        select: { currentAmount: true, targetAmount: true, status: true },
+      }),
+      prisma.trip.findMany({
+        where: { userId },
+        select: { id: true, status: true },
+      }),
     ]);
 
-    const errors = [transactionsRes, investmentsRes, goalsRes, tripsRes].find((r) => r.error);
-    if (errors?.error) return Response.json({ success: false, message: errors.error.message }, { status: 500 });
+    const isIncome = (t: { type: string }) => t.type.toUpperCase() === 'INCOME';
+    const isExpense = (t: { type: string }) => t.type.toUpperCase() === 'EXPENSE';
 
-    const isIncome = (t: any) => (t.type || '').toUpperCase() === 'INCOME';
-    const isExpense = (t: any) => (t.type || '').toUpperCase() === 'EXPENSE';
+    const totalRevenue = transactions.filter(isIncome).reduce((sum, t) => sum + Number(t.amount), 0);
+    const totalExpenses = transactions.filter(isExpense).reduce((sum, t) => sum + Number(t.amount), 0);
+    const totalInvested = investments.reduce((sum, t) => sum + Number(t.quantity) * Number(t.avgCost), 0);
+    const totalPortfolio = investments.reduce((sum, t) => sum + Number(t.quantity) * Number(t.currentPrice), 0);
+    const totalGoals = goals.length;
+    const completedGoals = goals.filter((g) => g.status === 'completed').length;
+    const tripsPlanned = trips.filter((t) => t.status === 'planned').length;
+    const tripsCompleted = trips.filter((t) => t.status === 'completed').length;
 
-    const tx = transactionsRes.data || [];
-
-    const totalRevenue = tx.filter(isIncome).reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalExpenses = tx.filter(isExpense).reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalInvested = (investmentsRes.data || []).reduce((sum, t) => sum + Number(t.quantity) * Number(t.avg_cost), 0);
-    const totalPortfolio = (investmentsRes.data || []).reduce((sum, t) => sum + Number(t.quantity) * Number(t.current_price), 0);
-    const totalGoals = (goalsRes.data || []).length;
-    const completedGoals = (goalsRes.data || []).filter((g) => g.status === 'completed').length;
-    const tripsPlanned = (tripsRes.data || []).filter((t) => t.status === 'planned').length;
-    const tripsCompleted = (tripsRes.data || []).filter((t) => t.status === 'completed').length;
-
-    const categoryMap = tx.filter(isExpense).reduce<Record<string, number>>((acc, t) => {
-      const cat = t.category_name || t.category || 'Outros';
+    const categoryMap = transactions.filter(isExpense).reduce<Record<string, number>>((acc, t) => {
+      const cat = t.category || 'Outros';
       acc[cat] = (acc[cat] || 0) + Number(t.amount);
       return acc;
     }, {});
+
     const barData = Object.entries(categoryMap).map(([name, expense]) => {
-      const income = tx.filter((t) => isIncome(t) && (t.category_name === name || t.category === name)).reduce((s, t) => s + Number(t.amount), 0);
+      const income = transactions
+        .filter((t) => isIncome(t) && t.category === name)
+        .reduce((s, t) => s + Number(t.amount), 0);
       return { name, Receita: income, Despesa: expense };
     });
 
-    // Category breakdown for donut chart
     const CATEGORY_COLORS: Record<string, string> = {
       'Alimentação': '#f97316',
       'Moradia': '#8b5cf6',
@@ -65,6 +75,7 @@ export async function GET(request: NextRequest) {
       'Dívidas': '#ef4444',
       'Outros': '#6b7280',
     };
+
     const categoryBreakdown = Object.entries(categoryMap)
       .map(([name, value]) => ({
         name,
@@ -74,15 +85,14 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.value - a.value);
 
-    // Cash flow trend (last 6 months)
     const now = new Date();
     const cashFlowTrend: CashFlowChartData[] = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short' });
-      const monthTx = tx.filter(t => {
-        const txDate = t.transaction_date || t.date || '';
+      const monthTx = transactions.filter((t) => {
+        const txDate = t.date ? new Date(t.date).toISOString().slice(0, 7) : '';
         return txDate.startsWith(yearMonth);
       });
       const income = monthTx.filter(isIncome).reduce((sum, t) => sum + Number(t.amount), 0);
@@ -99,8 +109,14 @@ export async function GET(request: NextRequest) {
         barData,
         categoryBreakdown,
         cashFlowTrend,
-        transactions: tx.slice(0, 10).map((t) => ({
-          id: t.id, description: t.description, amount: Number(t.amount), type: isIncome(t) ? 'INCOME' as const : 'EXPENSE' as const, date: t.transaction_date || t.date})),
-      }});
+        transactions: transactions.slice(0, 10).map((t) => ({
+          id: t.id,
+          description: t.description,
+          amount: Number(t.amount),
+          type: isIncome(t) ? 'INCOME' as const : 'EXPENSE' as const,
+          date: t.date,
+        })),
+      },
+    });
   });
 }
