@@ -1,5 +1,17 @@
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
+
+const updateTripSchema = z.object({
+  id: z.string().min(1, 'ID é obrigatório'),
+  status: z.string().optional(),
+  name: z.string().optional(),
+  destination: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  notes: z.string().optional(),
+  totalCost: z.number().optional(),
+});
 
 export async function GET(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId, supabase }) => {
