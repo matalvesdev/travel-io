@@ -12,3 +12,4 @@ export * from './use-dashboard';
 export * from './use-analytics';
 export * from './use-settings';
 export * from './use-alerts';
+export * from './use-ai-travel';
