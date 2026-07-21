@@ -19,11 +19,33 @@ export function useTransactions(params?: {
 
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data: CreateTransactionRequest) => financeApi.createTransaction(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['transactions'] }); },
+  });
+}
+
+export function useDeleteTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => financeApi.deleteTransaction(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['transactions'] }); },
+  });
+}
+
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateTransactionRequest> }) =>
+      financeApi.updateTransaction(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['transactions'] }); },
+  });
+}
+
+export function useImportTransactions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (transactions: CreateTransactionRequest[]) => financeApi.importTransactions(transactions),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['transactions'] }); },
   });
 }

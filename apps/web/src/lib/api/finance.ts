@@ -24,4 +24,13 @@ export const financeApi = {
 
   createTransaction: (data: CreateTransactionRequest) =>
     apiClient.post<ApiResponse<{ transactionId: string }>>('/api/finance/transactions', data),
+
+  updateTransaction: (id: string, data: Partial<CreateTransactionRequest>) =>
+    apiClient.put<ApiResponse<{ success: boolean }>>(`/api/finance/transactions?id=${id}`, data),
+
+  deleteTransaction: (id: string) =>
+    apiClient.delete<ApiResponse<{ success: boolean }>>(`/api/finance/transactions?id=${id}`),
+
+  importTransactions: (transactions: CreateTransactionRequest[]) =>
+    apiClient.post<ApiResponse<{ imported: number }>>('/api/finance/transactions/import', { transactions }),
 };
