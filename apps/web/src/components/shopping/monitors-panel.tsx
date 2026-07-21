@@ -88,7 +88,7 @@ export function MonitorsPanel() {
         </div>
       ) : (
         <div className="space-y-3">
-          {monitors.map(m => {
+          {monitors.map((m: any) => {
             const belowTarget = m.target_price > 0 && m.current_price > 0 && m.current_price <= m.target_price;
             return (
               <div key={m.id} className="rounded-xl border border-border/50 bg-card/80 p-4 hover:bg-muted/30 transition-all">

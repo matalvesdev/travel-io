@@ -104,8 +104,6 @@ export default function SettingsPage() {
       whatsappEnabled: notifications.whatsapp,
       priceAlerts: notifications.priceAlerts,
       travelDeals: notifications.travelDeals,
-      investmentAlerts: notifications.investmentAlerts,
-      marketing: notifications.marketing,
     }, {
       onSuccess: () => showToast('Preferências salvas!'),
       onError: () => showToast('Erro ao salvar preferências', 'error'),
