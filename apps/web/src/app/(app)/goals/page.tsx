@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Target, Loader2 } from 'lucide-react';
+import { Plus, Target, Loader2, BarChart3, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MetricCard } from '@/components/analytics/metric-card';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useAddGoalProgress } from '@/hooks/api/use-goals';
 import { GoalCard } from '@/components/goals/goal-card';
 import { AddGoalModal } from '@/components/goals/add-goal-modal';
@@ -74,24 +75,24 @@ export default function GoalsPage() {
 
       {/* Stats Row */}
       <div className="grid gap-4 md:grid-cols-3">
-        <motion.div whileHover={{ y: -1 }} className="phantom-card">
-          <div className="p-6">
-            <p className="text-sm text-muted-foreground">Total de Metas</p>
-            <p className="text-2xl font-bold">{totalGoals}</p>
-          </div>
-        </motion.div>
-        <motion.div whileHover={{ y: -1 }} className="phantom-card">
-          <div className="p-6">
-            <p className="text-sm text-muted-foreground">Em Andamento</p>
-            <p className="text-2xl font-bold text-primary">{inProgressGoals}</p>
-          </div>
-        </motion.div>
-        <motion.div whileHover={{ y: -1 }} className="phantom-card">
-          <div className="p-6">
-            <p className="text-sm text-muted-foreground">Concluídas</p>
-            <p className="text-2xl font-bold text-success">{completedGoals}</p>
-          </div>
-        </motion.div>
+        <MetricCard
+          title="Total de Metas"
+          value={String(totalGoals)}
+          icon={Target}
+          iconColor="text-primary"
+        />
+        <MetricCard
+          title="Em Andamento"
+          value={String(inProgressGoals)}
+          icon={Clock}
+          iconColor="text-primary"
+        />
+        <MetricCard
+          title="Concluídas"
+          value={String(completedGoals)}
+          icon={CheckCircle2}
+          iconColor="text-success"
+        />
       </div>
 
       {/* Goals Grid */}

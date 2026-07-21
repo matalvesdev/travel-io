@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plane, Hotel, Calendar, MapPin, Star, Trash2, Check, X, ChevronRight, Sparkles, Wallet, TrendingUp, Target, CreditCard, ArrowRight, Plus, Search, Map, Loader2, Eye, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
+import { MetricCard } from '@/components/analytics/metric-card';
 import { useTrips, useUpdateTrip, useDeleteTrip } from '@/hooks/api/use-travel';
 import type { Trip } from '@/types/shared';
 
@@ -94,30 +95,30 @@ export default function TripsPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="phantom-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center"><Target className="h-5 w-5 text-blue-500" /></div>
-            <div><p className="text-xs text-muted-foreground">Planejadas</p><p className="text-xl font-bold">{trips.filter(t => t.status === 'planned').length}</p></div>
-          </div>
-        </div>
-        <div className="phantom-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center"><Plane className="h-5 w-5 text-amber-500" /></div>
-            <div><p className="text-xs text-muted-foreground">Em Andamento</p><p className="text-xl font-bold">{trips.filter(t => t.status === 'ongoing').length}</p></div>
-          </div>
-        </div>
-        <div className="phantom-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center"><Check className="h-5 w-5 text-green-500" /></div>
-            <div><p className="text-xs text-muted-foreground">Concluídas</p><p className="text-xl font-bold">{trips.filter(t => t.status === 'completed').length}</p></div>
-          </div>
-        </div>
-        <div className="phantom-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center"><TrendingUp className="h-5 w-5 text-purple-500" /></div>
-            <div><p className="text-xs text-muted-foreground">Total Investido</p><p className="text-xl font-bold">{formatCurrency(totalSpent + totalPlanned)}</p></div>
-          </div>
-        </div>
+        <MetricCard
+          title="Planejadas"
+          value={String(trips.filter(t => t.status === 'planned').length)}
+          icon={Target}
+          iconColor="text-blue-500"
+        />
+        <MetricCard
+          title="Em Andamento"
+          value={String(trips.filter(t => t.status === 'ongoing').length)}
+          icon={Plane}
+          iconColor="text-amber-500"
+        />
+        <MetricCard
+          title="Concluídas"
+          value={String(trips.filter(t => t.status === 'completed').length)}
+          icon={Check}
+          iconColor="text-green-500"
+        />
+        <MetricCard
+          title="Total Investido"
+          value={formatCurrency(totalSpent + totalPlanned)}
+          icon={TrendingUp}
+          iconColor="text-purple-500"
+        />
       </div>
 
       {/* Upcoming trip highlight */}
