@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Newspaper, Clock, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
+import { Newspaper, Clock, ExternalLink, RefreshCw, Loader2, Globe, Flag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -20,34 +20,50 @@ interface NewsSectionProps {
 
 export function NewsSection({ initialNews = [] }: NewsSectionProps) {
   const [period, setPeriod] = React.useState('day');
+  const [activeTab, setActiveTab] = React.useState<'general' | 'brasil'>('general');
   const [news, setNews] = React.useState<NewsItem[]>(initialNews);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const fetchNews = React.useCallback(async (p: string) => {
+  const fetchNews = React.useCallback(async (p: string, tab: 'general' | 'brasil') => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/news/external?period=${p}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.news?.length > 0) {
-          setNews(data.news);
-          setLoading(false);
-          return;
+      if (tab === 'brasil') {
+        // Fetch from BRAPI news endpoint
+        const res = await fetch(`/api/news/brapi`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.news?.length > 0) {
+            setNews(data.news);
+            setLoading(false);
+            return;
+          }
         }
-      }
-      // Fallback to original news endpoint
-      const fallbackRes = await fetch(`/api/news?period=${p}`);
-      if (fallbackRes.ok) {
-        const fallbackData = await fallbackRes.json();
-        if (fallbackData.news?.length > 0) {
-          setNews(fallbackData.news);
-          setLoading(false);
-          return;
+        setError('Unable to fetch Brazil news');
+      } else {
+        // General news - existing logic
+        const res = await fetch(`/api/news/external?period=${p}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.news?.length > 0) {
+            setNews(data.news);
+            setLoading(false);
+            return;
+          }
         }
+        // Fallback to original news endpoint
+        const fallbackRes = await fetch(`/api/news?period=${p}`);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          if (fallbackData.news?.length > 0) {
+            setNews(fallbackData.news);
+            setLoading(false);
+            return;
+          }
+        }
+        setError('Unable to fetch news');
       }
-      setError('Unable to fetch news');
     } catch {
       setError('Network error');
     }
@@ -55,8 +71,8 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
   }, []);
 
   React.useEffect(() => {
-    fetchNews(period);
-  }, [period, fetchNews]);
+    fetchNews(period, activeTab);
+  }, [period, activeTab, fetchNews]);
 
   return (
     <Card className="border-border/50">
@@ -67,6 +83,33 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
             Notícias Financeiras
           </CardTitle>
           <div className="flex items-center gap-2">
+            {/* Tab Buttons */}
+            <div className="flex gap-1 rounded-xl border bg-card/50 overflow-hidden">
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`px-3 py-1.5 text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  activeTab === 'general'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <Globe className="h-3 w-3" />
+                Geral
+              </button>
+              <button
+                onClick={() => setActiveTab('brasil')}
+                className={`px-3 py-1.5 text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  activeTab === 'brasil'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <Flag className="h-3 w-3" />
+                Brasil
+              </button>
+            </div>
+
+            {/* Period Filter */}
             <div className="flex gap-1 rounded-xl border bg-card/50 overflow-hidden">
               {[
                 { v: 'day', l: 'Dia' },
@@ -87,11 +130,12 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
                 </button>
               ))}
             </div>
+
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => fetchNews(period)}
+              onClick={() => fetchNews(period, activeTab)}
               disabled={loading}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -107,7 +151,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-sm text-muted-foreground mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={() => fetchNews(period)}>
+            <Button variant="outline" size="sm" onClick={() => fetchNews(period, activeTab)}>
               <RefreshCw className="mr-1 h-3 w-3" /> Tentar novamente
             </Button>
           </div>
