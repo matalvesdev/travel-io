@@ -18,13 +18,13 @@ export function CouponsPanel() {
   }, [couponsData]);
 
   const storeNames = React.useMemo(() => {
-    const names = [...new Set(coupons.map(c => c.store_name))].sort();
+    const names = [...new Set(coupons.map(c => c.storeName))].sort();
     return names;
   }, [coupons]);
 
   const filteredCoupons = React.useMemo(() => {
     if (selectedStore === 'all') return coupons;
-    return coupons.filter(c => c.store_name === selectedStore);
+    return coupons.filter(c => c.storeName === selectedStore);
   }, [coupons, selectedStore]);
 
   const handleCopy = (code: string, id: string) => {
@@ -97,17 +97,17 @@ export function CouponsPanel() {
       {/* Coupons Grid */}
       <div className="grid gap-3 md:grid-cols-2">
         {filteredCoupons.map(coupon => {
-          const daysLeft = coupon.end_date ? Math.max(0, Math.ceil((new Date(coupon.end_date).getTime() - Date.now()) / 86400000)) : 7;
+          const daysLeft = coupon.endDate ? Math.max(0, Math.ceil((new Date(coupon.endDate).getTime() - Date.now()) / 86400000)) : 7;
           const isCopied = copiedId === coupon.id;
 
           return (
             <div key={coupon.id} className="rounded-xl border border-dashed border-border/80 p-4 hover:bg-muted/20 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{coupon.store_name}</p>
+                  <p className="font-medium text-sm">{coupon.storeName}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{coupon.description}</p>
-                  {coupon.min_purchase > 0 && (
-                    <p className="text-xs text-muted-foreground mt-0.5">Compra mínima: {formatCurrency(coupon.min_purchase)}</p>
+                  {coupon.minPurchase > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Compra mínima: {formatCurrency(coupon.minPurchase)}</p>
                   )}
                 </div>
                 <div className="text-right">

@@ -1,13 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { settingsApi, type ChangePasswordRequest } from '@/lib/api/settings';
+import { changePassword, getSessions, deleteSession, type ChangePasswordRequest } from '@/lib/api/settings';
 import { notificationsApi, type UpdatePreferencesRequest } from '@/lib/api/notifications';
 
 export function useSettings() {
   return useQuery({
     queryKey: ['settings', 'sessions'],
-    queryFn: () => settingsApi.getSessions(),
+    queryFn: () => getSessions(),
     select: (data) => data.data,
   });
 }
@@ -15,7 +15,7 @@ export function useSettings() {
 export function useSessions() {
   return useQuery({
     queryKey: ['settings', 'sessions'],
-    queryFn: () => settingsApi.getSessions(),
+    queryFn: () => getSessions(),
     select: (data) => data.data,
   });
 }
@@ -23,14 +23,14 @@ export function useSessions() {
 export function useRevokeSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (sessionId: string) => settingsApi.deleteSession(sessionId),
+    mutationFn: (sessionId: string) => deleteSession(sessionId),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['settings', 'sessions'] }); },
   });
 }
 
 export function useChangePassword() {
   return useMutation({
-    mutationFn: (data: ChangePasswordRequest) => settingsApi.changePassword(data),
+    mutationFn: (data: ChangePasswordRequest) => changePassword(data),
   });
 }
 
