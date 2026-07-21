@@ -26,9 +26,10 @@ export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
 
 // Server-side client with service role key (for API routes)
 export function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!secretKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY not configured');
-  return createClient(supabaseUrl, secretKey);
+  if (!url || !secretKey) throw new Error('Supabase env vars not configured');
+  return createClient(url, secretKey);
 }
 
 // Server-side client with cookie support (for Route Handlers & Server Components)
