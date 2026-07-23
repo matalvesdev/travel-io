@@ -1,318 +1,475 @@
-// Comprehensive Web Scraper — Playwright-based
-// Covers: Shopping, Flights, Hotels, Events, Real Estate & Classifieds
+// Unified Web Scraper — Hybrid Approach
+// Playwright for complex stores (Amazon, ML, Magalu)
+// Fetch + HTML parse for simpler stores (Casas Bahia, AliExpress, Shopee, Netshoes)
 
 import { chromium, type Browser } from 'playwright-core';
+import type { ScrapedProduct } from '@/types/shopping';
 
-// ============ Types ============
-export interface ScrapedProduct { id: string; title: string; price: number; originalPrice?: number; url: string; store: string; imageUrl?: string; rating?: number; seller?: string; condition?: string; }
-export interface ScrapedFlight { id: string; airline: string; flightNumber: string; origin: string; destination: string; departure: string; arrival: string; price: number; duration: string; stops: number; }
-export interface ScrapedHotel { id: string; name: string; price: number; rating: number; reviews: number; imageUrl?: string; address: string; amenities: string[]; }
-export interface ScrapedEvent { id: string; name: string; date: string; location: string; price: number; url: string; }
-export interface ScrapedListing { id: string; title: string; price: number; url: string; store: string; location?: string; area?: string; bedrooms?: number; }
+// ============ Cache ============
+const cache = new Map<string, { data: ScrapedProduct[]; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// ============ Browser Manager ============
+function getCached(key: string): ScrapedProduct[] | null {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
+    return entry.data;
+  }
+  cache.delete(key);
+  return null;
+}
+
+function setCache(key: string, data: ScrapedProduct[]): void {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+// ============ Browser Manager (Playwright) ============
 let browserInstance: Browser | null = null;
+
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
-    browserInstance = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    browserInstance = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
   }
   return browserInstance;
 }
 
 async function withPage<T>(fn: (page: any) => Promise<T>): Promise<T> {
   const browser = await getBrowser();
-  const ctx = await browser.newContext({ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', locale: 'pt-BR' });
+  const ctx = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    locale: 'pt-BR',
+  });
   const page = await ctx.newPage();
-  try { return await fn(page); } finally { await page.close(); await ctx.close(); }
+  try {
+    return await fn(page);
+  } finally {
+    await page.close();
+    await ctx.close();
+  }
 }
 
-// ============ SHOPPING: AMAZON ============
+// ============ Fetch + HTML Parse Helper ============
+async function fetchAndParse(url: string, parser: (html: string) => ScrapedProduct[]): Promise<ScrapedProduct[]> {
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    },
+    signal: AbortSignal.timeout(30000),
+  });
+  
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  
+  const html = await res.text();
+  return parser(html);
+}
+
+// ============ HTML Parser Helpers ============
+function parsePrice(text: string): number {
+  // Remove R$, spaces, and parse Brazilian price format
+  const cleaned = text.replace(/R\$\s*/, '').replace(/\./g, '').replace(',', '.').trim();
+  return parseFloat(cleaned) || 0;
+}
+
+function extractText(html: string, selector: string): string {
+  // Simple regex-based extraction for static HTML
+  const regex = new RegExp(`<[^>]*class="[^"]*${selector}[^"]*"[^>]*>([^<]*)<`, 'i');
+  const match = html.match(regex);
+  return match?.[1]?.trim() || '';
+}
+
+function extractAttribute(html: string, selector: string, attribute: string): string {
+  const regex = new RegExp(`<[^>]*class="[^"]*${selector}[^"]*"[^>]*${attribute}="([^"]*)"`, 'i');
+  const match = html.match(regex);
+  return match?.[1]?.trim() || '';
+}
+
+// ============ SHOPPING SCRAPERS ============
+
+// === PLAYWRIGHT SCRAPERS (Complex stores) ===
+
 export async function scrapeAmazon(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.amazon.com.br/s?k=${encodeURIComponent(keyword)}&language=pt_BR`, { waitUntil: 'domcontentloaded', timeout: 25000 });
+  const cacheKey = `amazon:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await withPage(async (page) => {
+    await page.goto(`https://www.amazon.com.br/s?k=${encodeURIComponent(keyword)}&language=pt_BR`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 25000,
+    });
     await page.waitForTimeout(3000);
     await page.waitForSelector('[data-component-type="s-search-result"], .s-result-item[data-asin]', { timeout: 15000 }).catch(() => {});
+    
     return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-component-type="s-search-result"], .s-result-item[data-asin]')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('h2 span, .a-text-normal')?.textContent?.trim() || '';
-        const w = el.querySelector('.a-price-whole')?.textContent?.replace(/\./g, '').trim() || '0';
-        const f = el.querySelector('.a-price-fraction')?.textContent?.trim() || '00';
-        const price = parseFloat(`${w}.${f}`) || 0;
-        const link = el.querySelector('h2 a, a.a-link-normal')?.getAttribute('href') || '';
-        return { id: `amz-${Date.now()}-${i}`, title, price, originalPrice: price, url: link.startsWith('http') ? link : `https://www.amazon.com.br${link}`, store: 'Amazon', imageUrl: el.querySelector('img')?.getAttribute('src') || '' };
-      }).filter((p: any) => p.price > 0 && p.title);
+      return Array.from(document.querySelectorAll('[data-component-type="s-search-result"], .s-result-item[data-asin]'))
+        .slice(0, 20)
+        .map((el, i) => {
+          const title = el.querySelector('h2 span, .a-text-normal')?.textContent?.trim() || '';
+          const w = el.querySelector('.a-price-whole')?.textContent?.replace(/\./g, '').trim() || '0';
+          const f = el.querySelector('.a-price-fraction')?.textContent?.trim() || '00';
+          const price = parseFloat(`${w}.${f}`) || 0;
+          const link = el.querySelector('h2 a, a.a-link-normal')?.getAttribute('href') || '';
+          const imageUrl = el.querySelector('img')?.getAttribute('src') || '';
+          const rating = el.querySelector('.a-icon-alt')?.textContent?.match(/[\d.]+/)?.[0];
+          
+          return {
+            id: `amz-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: link.startsWith('http') ? link : `https://www.amazon.com.br${link}`,
+            store: 'Amazon',
+            imageUrl,
+            rating: rating ? parseFloat(rating) : undefined,
+          };
+        })
+        .filter((p: any) => p.price > 0 && p.title);
     });
   });
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: MERCADO LIVRE ============
 export async function scrapeML(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://lista.mercadolivre.com.br/${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
+  const cacheKey = `ml:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await withPage(async (page) => {
+    await page.goto(`https://lista.mercadolivre.com.br/${encodeURIComponent(keyword)}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 25000,
+    });
     await page.waitForTimeout(5000);
     await page.waitForSelector('.ui-search-layout__item, .ui-search-result__wrapper', { timeout: 15000 }).catch(() => {});
+    
     return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.ui-search-layout__item, .ui-search-result')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('.ui-search-item__title, .poly-component__title')?.textContent?.trim() || '';
-        const priceEl = el.querySelector('.andes-money-amount__fraction');
-        const price = priceEl ? parseFloat(priceEl.textContent.replace(/\./g, '').replace(',', '.')) : 0;
-        const link = el.querySelector('a')?.href || '';
-        return { id: `ml-${Date.now()}-${i}`, title, price, originalPrice: price, url: link.split('#')[0], store: 'Mercado Livre', imageUrl: el.querySelector('img')?.src || '' };
-      }).filter((p: any) => p.price > 0 && p.title);
+      return Array.from(document.querySelectorAll('.ui-search-layout__item, .ui-search-result'))
+        .slice(0, 20)
+        .map((el, i) => {
+          const title = el.querySelector('.ui-search-item__title, .poly-component__title')?.textContent?.trim() || '';
+          const priceEl = el.querySelector('.andes-money-amount__fraction');
+          const price = priceEl ? parseFloat(priceEl.textContent.replace(/\./g, '').replace(',', '.')) : 0;
+          const link = el.querySelector('a')?.href || '';
+          const imageUrl = el.querySelector('img')?.src || '';
+          
+          return {
+            id: `ml-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: link.split('#')[0],
+            store: 'Mercado Livre',
+            imageUrl,
+          };
+        })
+        .filter((p: any) => p.price > 0 && p.title);
     });
   });
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: MAGALU ============
 export async function scrapeMagalu(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.magazineluiza.com.br/busca/${encodeURIComponent(keyword)}/`, { waitUntil: 'domcontentloaded', timeout: 25000 });
+  const cacheKey = `magalu:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await withPage(async (page) => {
+    await page.goto(`https://www.magazineluiza.com.br/busca/${encodeURIComponent(keyword)}/`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 25000,
+    });
     await page.waitForTimeout(3000);
+    
     return page.evaluate(() => {
       const items = document.querySelectorAll('[data-testid="product-card"], .product-card');
-      return Array.from(items).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('h2, [data-testid="product-title"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-testid="product-price"], .price-value')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/R\$\s*/, '').replace(/\./g, '').replace(',', '.')) || 0;
-        return { id: `mag-${Date.now()}-${i}`, title, price, originalPrice: price, url: el.querySelector('a')?.href || '', store: 'Magazine Luiza' };
-      }).filter((p: any) => p.price > 0 && p.title);
+      return Array.from(items)
+        .slice(0, 20)
+        .map((el, i) => {
+          const title = el.querySelector('h2, [data-testid="product-title"]')?.textContent?.trim() || '';
+          const priceText = el.querySelector('[data-testid="product-price"], .price-value')?.textContent?.trim() || '';
+          const price = parsePrice(priceText);
+          const link = el.querySelector('a')?.href || '';
+          const imageUrl = el.querySelector('img')?.src || '';
+          
+          return {
+            id: `mag-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: link,
+            store: 'Magazine Luiza',
+            imageUrl,
+          };
+        })
+        .filter((p: any) => p.price > 0 && p.title);
     });
   });
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: CASAS BAHIA ============
+// === FETCH + HTML PARSE SCRAPERS (Simpler stores) ===
+
 export async function scrapeCasasBahia(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.casasbahia.com.br/busca/${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(3000);
-    return page.evaluate(() => {
-      const items = document.querySelectorAll('[data-testid="product-card"], .product-card');
-      return Array.from(items).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('[data-testid="product-card-title"], .product-card__title')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-testid="product-card-price"], .product-card__price')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/R\$\s*/, '').replace(/\./g, '').replace(',', '.')) || 0;
-        return { id: `cb-${Date.now()}-${i}`, title, price, originalPrice: price, url: el.querySelector('a')?.href || '', store: 'Casas Bahia' };
-      }).filter((p: any) => p.price > 0 && p.title);
-    });
-  });
+  const cacheKey = `casasbahia:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await fetchAndParse(
+    `https://www.casasbahia.com.br/busca/${encodeURIComponent(keyword)}`,
+    (html) => {
+      const products: ScrapedProduct[] = [];
+      // Parse product cards from HTML
+      const cardRegex = /<div[^>]*data-testid="product-card"[^>]*>([\s\S]*?)<\/div>/gi;
+      let match;
+      let i = 0;
+      
+      while ((match = cardRegex.exec(html)) && i < 20) {
+        const cardHtml = match[1];
+        const title = extractText(cardHtml, 'product-card-title');
+        const priceText = extractText(cardHtml, 'product-card-price');
+        const price = parsePrice(priceText);
+        const url = extractAttribute(cardHtml, 'product-card', 'href');
+        const imageUrl = extractAttribute(cardHtml, 'product-card', 'src');
+        
+        if (price > 0 && title) {
+          products.push({
+            id: `cb-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: url.startsWith('http') ? url : `https://www.casasbahia.com.br${url}`,
+            store: 'Casas Bahia',
+            imageUrl,
+          });
+          i++;
+        }
+      }
+      
+      return products;
+    }
+  );
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: ALIEXPRESS ============
 export async function scrapeAliExpress(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.aliexpress.com/w/wholesale-${encodeURIComponent(keyword)}.html`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(3000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.list--gallery--C2f2tvm, [class*="product-card"]')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('[class*="title"], h1')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[class*="price"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace('.', '').replace(',', '.')) || 0;
-        return { id: `ali-${Date.now()}-${i}`, title, price, originalPrice: price, url: el.querySelector('a')?.href || '', store: 'AliExpress' };
-      }).filter((p: any) => p.price > 0 && p.title);
-    });
-  });
+  const cacheKey = `aliexpress:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await fetchAndParse(
+    `https://www.aliexpress.com/w/wholesale-${encodeURIComponent(keyword)}.html`,
+    (html) => {
+      const products: ScrapedProduct[] = [];
+      const cardRegex = /<div[^>]*class="[^"]*product-card[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
+      let match;
+      let i = 0;
+      
+      while ((match = cardRegex.exec(html)) && i < 20) {
+        const cardHtml = match[1];
+        const title = extractText(cardHtml, 'title');
+        const priceText = extractText(cardHtml, 'price');
+        const price = parsePrice(priceText);
+        const url = extractAttribute(cardHtml, 'product-card', 'href');
+        const imageUrl = extractAttribute(cardHtml, 'product-card', 'src');
+        
+        if (price > 0 && title) {
+          products.push({
+            id: `ali-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: url.startsWith('http') ? url : `https://www.aliexpress.com${url}`,
+            store: 'AliExpress',
+            imageUrl,
+          });
+          i++;
+        }
+      }
+      
+      return products;
+    }
+  );
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: SHOPEE ============
 export async function scrapeShopee(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://shopee.com.br/search?keyword=${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(5000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-sqe="item"], .shopee-search-item-result__item')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('[data-sqe="name"], .line-clamp-2')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[class*="price"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace('.', '').replace(',', '.')) || 0;
-        return { id: `sh-${Date.now()}-${i}`, title, price, originalPrice: price, url: el.querySelector('a')?.href || '', store: 'Shopee' };
-      }).filter((p: any) => p.price > 0 && p.title);
-    });
-  });
+  const cacheKey = `shopee:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const results = await fetchAndParse(
+    `https://shopee.com.br/search?keyword=${encodeURIComponent(keyword)}`,
+    (html) => {
+      const products: ScrapedProduct[] = [];
+      const cardRegex = /<div[^>]*class="[^"]*shopee-search-item[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
+      let match;
+      let i = 0;
+      
+      while ((match = cardRegex.exec(html)) && i < 20) {
+        const cardHtml = match[1];
+        const title = extractText(cardHtml, 'name');
+        const priceText = extractText(cardHtml, 'price');
+        const price = parsePrice(priceText);
+        const url = extractAttribute(cardHtml, 'shopee-search-item', 'href');
+        const imageUrl = extractAttribute(cardHtml, 'shopee-search-item', 'src');
+        
+        if (price > 0 && title) {
+          products.push({
+            id: `sh-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: url.startsWith('http') ? url : `https://shopee.com.br${url}`,
+            store: 'Shopee',
+            imageUrl,
+          });
+          i++;
+        }
+      }
+      
+      return products;
+    }
+  );
+
+  setCache(cacheKey, results);
+  return results;
 }
 
-// ============ SHOPPING: NETSHOES ============
 export async function scrapeNetshoes(keyword: string): Promise<ScrapedProduct[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.netshoes.com.br/busca?q=${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(3000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-testid="product-card"], .product-card')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('h3, [data-testid="product-title"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-testid="price"], .price')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/R\$\s*/, '').replace(/\./g, '').replace(',', '.')) || 0;
-        return { id: `ns-${Date.now()}-${i}`, title, price, originalPrice: price, url: el.querySelector('a')?.href || '', store: 'Netshoes' };
-      }).filter((p: any) => p.price > 0 && p.title);
-    });
-  });
-}
+  const cacheKey = `netshoes:${keyword}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
 
-// ============ FLIGHTS: LATAM ============
-export async function scrapeFlightsLATAM(origin: string, dest: string, date: string): Promise<ScrapedFlight[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.latamairlines.com/br/pt/voos?origin=${origin}&outbound=${date}&destination=${dest}&adt=1&chd=0&inf=0`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(8000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[class*="flight"], [class*="itinerary"]')).slice(0, 10).map((el, i) => {
-        const text = el.textContent || '';
-        const priceMatch = text.match(/R\$\s*([\d.,]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')) : 0;
-        return { id: `latam-${Date.now()}-${i}`, airline: 'LATAM', flightNumber: '', origin, destination: dest, departure: '', arrival: '', price, duration: '', stops: 0 };
-      }).filter((f: any) => f.price > 0);
-    });
-  });
-}
+  const results = await fetchAndParse(
+    `https://www.netshoes.com.br/busca?q=${encodeURIComponent(keyword)}`,
+    (html) => {
+      const products: ScrapedProduct[] = [];
+      const cardRegex = /<div[^>]*data-testid="product-card"[^>]*>([\s\S]*?)<\/div>/gi;
+      let match;
+      let i = 0;
+      
+      while ((match = cardRegex.exec(html)) && i < 20) {
+        const cardHtml = match[1];
+        const title = extractText(cardHtml, 'product-title');
+        const priceText = extractText(cardHtml, 'price');
+        const price = parsePrice(priceText);
+        const url = extractAttribute(cardHtml, 'product-card', 'href');
+        const imageUrl = extractAttribute(cardHtml, 'product-card', 'src');
+        
+        if (price > 0 && title) {
+          products.push({
+            id: `ns-${Date.now()}-${i}`,
+            title,
+            price,
+            originalPrice: price,
+            url: url.startsWith('http') ? url : `https://www.netshoes.com.br${url}`,
+            store: 'Netshoes',
+            imageUrl,
+          });
+          i++;
+        }
+      }
+      
+      return products;
+    }
+  );
 
-// ============ FLIGHTS: GOL ============
-export async function scrapeFlightsGOL(origin: string, dest: string, date: string): Promise<ScrapedFlight[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.voegol.com.br/pt-br/voos?origin=${origin}&destination=${dest}&departure=${date}&adt=1`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(8000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[class*="flight"], [class*="itinerary"]')).slice(0, 10).map((el, i) => {
-        const text = el.textContent || '';
-        const priceMatch = text.match(/R\$\s*([\d.,]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')) : 0;
-        return { id: `gol-${Date.now()}-${i}`, airline: 'GOL', flightNumber: '', origin, destination: dest, departure: '', arrival: '', price, duration: '', stops: 0 };
-      }).filter((f: any) => f.price > 0);
-    });
-  });
-}
-
-// ============ FLIGHTS: AZUL ============
-export async function scrapeFlightsAzul(origin: string, dest: string, date: string): Promise<ScrapedFlight[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.voeazul.com.br/pt-br/voos?origin=${origin}&destination=${dest}&departureDate=${date}&adults=1`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(8000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[class*="flight"], [class*="itinerary"]')).slice(0, 10).map((el, i) => {
-        const text = el.textContent || '';
-        const priceMatch = text.match(/R\$\s*([\d.,]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')) : 0;
-        return { id: `azul-${Date.now()}-${i}`, airline: 'Azul', flightNumber: '', origin, destination: dest, departure: '', arrival: '', price, duration: '', stops: 0 };
-      }).filter((f: any) => f.price > 0);
-    });
-  });
-}
-
-// ============ FLIGHTS: KAYAK ============
-export async function scrapeFlightsKAYAK(origin: string, dest: string, date: string): Promise<ScrapedFlight[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.kayak.com.br/flights/${origin}-${dest}/${date}?sort=bestflight_a`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(10000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[class*="nrc6"], [class*="resultInner"]')).slice(0, 10).map((el, i) => {
-        const text = el.textContent || '';
-        const priceMatch = text.match(/R\$\s*([\d.,]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')) : 0;
-        return { id: `kayak-${Date.now()}-${i}`, airline: '', flightNumber: '', origin, destination: dest, departure: '', arrival: '', price, duration: '', stops: 0 };
-      }).filter((f: any) => f.price > 0);
-    });
-  });
-}
-
-// ============ HOTELS: BOOKING ============
-export async function scrapeBooking(dest: string, checkin: string, checkout: string): Promise<ScrapedHotel[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(dest)}&checkin=${checkout}&checkout=${checkin}&group_adults=2&no_rooms=1&lang=pt-br`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(8000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-testid="property-card"]')).slice(0, 20).map((el, i) => {
-        const name = el.querySelector('[data-testid="title"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-testid="price-and-discounted-price"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        const rating = el.querySelector('[data-testid="rating-stars"]')?.getAttribute('aria-label')?.match(/[\d.]+/)?.[0] || '';
-        return { id: `bk-${Date.now()}-${i}`, name, price, rating: parseFloat(rating) || 0, reviews: 0, imageUrl: el.querySelector('img')?.src || '', address: dest, amenities: [] };
-      }).filter((h: any) => h.price > 0 && h.name);
-    });
-  });
-}
-
-// ============ HOTELS: AIRBNB ============
-export async function scrapeAirbnb(dest: string, checkin: string, checkout: string): Promise<ScrapedHotel[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.airbnb.com.br/s/${encodeURIComponent(dest)}/homes?checkin=${checkout}&checkout=${checkin}&adults=2`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(8000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[itemprop="itemListElement"], [data-testid="card-container"]')).slice(0, 20).map((el, i) => {
-        const name = el.querySelector('[data-testid="listing-card-title"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-testid="price-availability-row"]')?.textContent?.trim() || '';
-        const priceMatch = priceText.match(/R\$\s*([\d.,]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/\./g, '').replace(',', '.')) : 0;
-        return { id: `air-${Date.now()}-${i}`, name, price, rating: 0, reviews: 0, imageUrl: el.querySelector('img')?.src || '', address: dest, amenities: [] };
-      }).filter((h: any) => h.price > 0 && h.name);
-    });
-  });
-}
-
-// ============ EVENTS: SYMPLA ============
-export async function scrapeSympla(keyword: string): Promise<ScrapedEvent[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.sympla.com.br/buscar?q=${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(5000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[class*="event-card"], .sympla-card')).slice(0, 20).map((el, i) => {
-        const name = el.querySelector('h2, [class*="title"]')?.textContent?.trim() || '';
-        const dateText = el.querySelector('time, [class*="date"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[class*="price"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        return { id: `sym-${Date.now()}-${i}`, name, date: dateText, location: '', price, url: el.querySelector('a')?.href || '' };
-      }).filter((e: any) => e.name);
-    });
-  });
-}
-
-// ============ REAL ESTATE: OLX ============
-export async function scrapeOLX(keyword: string): Promise<ScrapedListing[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.olx.com.br/imoveis?q=${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(5000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-ds-component="DS-AdCard"], .adcard')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('[data-ds-component="DS-Text"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[data-ds-component="DS-TextPrice"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace('.', '').replace(',', '.')) || 0;
-        return { id: `olx-${Date.now()}-${i}`, title, price, url: el.querySelector('a')?.href || '', store: 'OLX' };
-      }).filter((l: any) => l.price > 0 && l.title);
-    });
-  });
-}
-
-// ============ REAL ESTATE: ZAP IMÓVEIS ============
-export async function scrapeZapImoveis(keyword: string): Promise<ScrapedListing[]> {
-  return withPage(async (page) => {
-    await page.goto(`https://www.zapimoveis.com.br/${encodeURIComponent(keyword)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    await page.waitForTimeout(5000);
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll('[data-type="property"], .card-listing')).slice(0, 20).map((el, i) => {
-        const title = el.querySelector('[class*="title"]')?.textContent?.trim() || '';
-        const priceText = el.querySelector('[class*="price"]')?.textContent?.trim() || '';
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace('.', '').replace(',', '.')) || 0;
-        return { id: `zap-${Date.now()}-${i}`, title, price, url: el.querySelector('a')?.href || '', store: 'Zap Imóveis' };
-      }).filter((l: any) => l.price > 0 && l.title);
-    });
-  });
+  setCache(cacheKey, results);
+  return results;
 }
 
 // ============ UNIFIED SEARCH ============
-export type SearchProvider = 'amazon' | 'mercadolivre' | 'magalu' | 'casasbahia' | 'aliexpress' | 'shopee' | 'netshoes' | 'latam' | 'gol' | 'azul' | 'kayak' | 'booking' | 'airbnb' | 'sympla' | 'olx' | 'zap';
 
-export async function searchProvider(provider: SearchProvider, params: any): Promise<any[]> {
-  switch (provider) {
-    case 'amazon': return scrapeAmazon(params.keyword);
-    case 'mercadolivre': return scrapeML(params.keyword);
-    case 'magalu': return scrapeMagalu(params.keyword);
-    case 'casasbahia': return scrapeCasasBahia(params.keyword);
-    case 'aliexpress': return scrapeAliExpress(params.keyword);
-    case 'shopee': return scrapeShopee(params.keyword);
-    case 'netshoes': return scrapeNetshoes(params.keyword);
-    case 'latam': return scrapeFlightsLATAM(params.origin, params.destination, params.date);
-    case 'gol': return scrapeFlightsGOL(params.origin, params.destination, params.date);
-    case 'azul': return scrapeFlightsAzul(params.origin, params.destination, params.date);
-    case 'kayak': return scrapeFlightsKAYAK(params.origin, params.destination, params.date);
-    case 'booking': return scrapeBooking(params.destination, params.checkin, params.checkout);
-    case 'airbnb': return scrapeAirbnb(params.destination, params.checkin, params.checkout);
-    case 'sympla': return scrapeSympla(params.keyword);
-    case 'olx': return scrapeOLX(params.keyword);
-    case 'zap': return scrapeZapImoveis(params.keyword);
-    default: return [];
+export type StoreId = 'amazon' | 'mercadolivre' | 'magalu' | 'casasbahia' | 'aliexpress' | 'shopee' | 'netshoes';
+
+export const STORES: Record<StoreId, { name: string; color: string; scraper: (keyword: string) => Promise<ScrapedProduct[]> }> = {
+  amazon: { name: 'Amazon', color: '#FF9900', scraper: scrapeAmazon },
+  mercadolivre: { name: 'Mercado Livre', color: '#FFE600', scraper: scrapeML },
+  magalu: { name: 'Magazine Luiza', color: '#E41E2C', scraper: scrapeMagalu },
+  casasbahia: { name: 'Casas Bahia', color: '#0066CC', scraper: scrapeCasasBahia },
+  aliexpress: { name: 'AliExpress', color: '#E43225', scraper: scrapeAliExpress },
+  shopee: { name: 'Shopee', color: '#EE4D2D', scraper: scrapeShopee },
+  netshoes: { name: 'Netshoes', color: '#00A859', scraper: scrapeNetshoes },
+};
+
+export async function searchProducts(
+  keyword: string,
+  stores: StoreId[] = Object.keys(STORES) as StoreId[]
+): Promise<{ products: ScrapedProduct[]; resultsByStore: Record<string, ScrapedProduct[]> }> {
+  const resultsByStore: Record<string, ScrapedProduct[]> = {};
+  
+  // Scrape all stores in parallel
+  const promises = stores.map(async (storeId) => {
+    try {
+      const store = STORES[storeId];
+      const products = await store.scraper(keyword);
+      resultsByStore[storeId] = products;
+      return products;
+    } catch (error) {
+      console.error(`[scraper] Error scraping ${storeId}:`, error);
+      resultsByStore[storeId] = [];
+      return [];
+    }
+  });
+  
+  const allResults = await Promise.all(promises);
+  const allProducts = allResults.flat();
+  
+  // Deduplicate by title + store + price
+  const seen = new Set<string>();
+  const deduped = allProducts.filter((p) => {
+    const key = `${p.title.toLowerCase().substring(0, 30)}-${p.store}-${p.price}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  
+  // Sort by price
+  deduped.sort((a, b) => a.price - b.price);
+  
+  return { products: deduped, resultsByStore };
+}
+
+// ============ HEALTH CHECK ============
+
+export async function checkStoreHealth(storeId: StoreId): Promise<{ healthy: boolean; latency: number; error?: string }> {
+  const start = Date.now();
+  try {
+    const store = STORES[storeId];
+    const products = await store.scraper('teste');
+    const latency = Date.now() - start;
+    return { healthy: products.length > 0, latency };
+  } catch (error: any) {
+    const latency = Date.now() - start;
+    return { healthy: false, latency, error: error.message || 'Unknown error' };
   }
+}
+
+export async function checkAllStoresHealth(): Promise<Record<StoreId, { healthy: boolean; latency: number; error?: string }>> {
+  const results: Record<string, any> = {};
+  const storeIds = Object.keys(STORES) as StoreId[];
+  
+  await Promise.all(
+    storeIds.map(async (storeId) => {
+      results[storeId] = await checkStoreHealth(storeId);
+    })
+  );
+  
+  return results as Record<StoreId, { healthy: boolean; latency: number; error?: string }>;
 }

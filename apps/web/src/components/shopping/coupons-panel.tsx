@@ -5,7 +5,7 @@ import { Tag, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { useCoupons } from '@/hooks/api/use-shopping';
-import type { Coupon } from '@/lib/api/shopping';
+import type { Coupon } from '@/types/shopping';
 
 export function CouponsPanel() {
   const { data: couponsData, isLoading } = useCoupons();
@@ -97,7 +97,7 @@ export function CouponsPanel() {
       {/* Coupons Grid */}
       <div className="grid gap-3 md:grid-cols-2">
         {filteredCoupons.map(coupon => {
-          const daysLeft = coupon.endDate ? Math.max(0, Math.ceil((new Date(coupon.endDate).getTime() - Date.now()) / 86400000)) : 7;
+          const daysLeft = coupon.daysRemaining ?? (coupon.endDate ? Math.max(0, Math.ceil((new Date(coupon.endDate).getTime() - Date.now()) / 86400000)) : 7);
           const isCopied = copiedId === coupon.id;
 
           return (
@@ -106,7 +106,7 @@ export function CouponsPanel() {
                 <div className="flex-1">
                   <p className="font-medium text-sm">{coupon.storeName}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{coupon.description}</p>
-                  {coupon.minPurchase > 0 && (
+                  {coupon.minPurchase && coupon.minPurchase > 0 && (
                     <p className="text-xs text-muted-foreground mt-0.5">Compra mínima: {formatCurrency(coupon.minPurchase)}</p>
                   )}
                 </div>
