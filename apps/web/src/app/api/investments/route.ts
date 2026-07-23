@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
         type: parsed.data.type,
         quantity: parsed.data.quantity,
         avgCost: parsed.data.avgCost,
+        currentPrice: 0,
+        amount: 0,
         userId,
       },
     });

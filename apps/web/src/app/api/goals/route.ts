@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId }) => {
     const data = await prisma.goal.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
     });
 
     return Response.json({ success: true, data: { goals: data } });
