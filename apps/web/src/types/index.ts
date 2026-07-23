@@ -5,7 +5,7 @@ export type {
   Investment, Allocation, Dividend,
   Trip, Flight, Hotel, FlightSearchResult, HotelSearchResult,
   MilesAccount, TransferRoute, Promotion,
-  Wishlist, WishlistItem, Deal, Coupon,
+  WishlistItem, Deal, Coupon,
   Goal, Milestone, GoalTemplate,
   Conversation, Message,
   Insight, ForecastItem,
