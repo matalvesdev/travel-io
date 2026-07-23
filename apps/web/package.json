@@ -69,6 +69,8 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/coverage-istanbul": "^1.6.1",
+    "@vitest/coverage-v8": "^1.6.1",
     "eslint": "^8.56.0",
     "eslint-config-next": "^16.0.0",
     "jsdom": "^29.1.1",
@@ -80,6 +82,6 @@
     "storybook": "^8.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.4.0"
+    "vitest": "^1.6.1"
   }
 }
