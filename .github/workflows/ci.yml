@@ -21,9 +21,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+        working-directory: apps/web
 
       - name: Run TypeScript check
         run: npm run typecheck
@@ -48,9 +50,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+        working-directory: apps/web
 
       - name: Build
         run: npm run build
