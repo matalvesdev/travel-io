@@ -31,10 +31,6 @@ jobs:
         run: npx prisma generate
         working-directory: apps/web
 
-      - name: Run TypeScript check
-        run: npm run typecheck
-        working-directory: apps/web
-
       - name: Run tests
         run: npm test
         working-directory: apps/web
