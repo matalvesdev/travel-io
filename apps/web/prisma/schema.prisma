@@ -8,14 +8,17 @@ datasource db {
 }
 
 model Profile {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String?
-  email     String?
-  phone     String?
-  birthDate DateTime? @map("birth_date")
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String?
+  email         String?
+  phone         String?
+  birthDate     DateTime? @map("birth_date")
+  avatarUrl     String?   @map("avatar_url")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  accountStatus String    @default("active") @map("account_status")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   @@map("profiles")
 }
 
