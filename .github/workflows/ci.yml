@@ -31,8 +31,8 @@ jobs:
         run: npx prisma generate
         working-directory: apps/web
 
-      - name: Run tests
-        run: npm test
+      - name: Run unit tests
+        run: npm run test:unit
         working-directory: apps/web
 
   build:
