@@ -1,0 +1,18 @@
+workflow: travel-io_ci
+version: "1.0"
+description: Run typecheck and tests for travel-io web app
+
+tasks:
+  - id: typecheck
+    type: task
+    action: exec_command
+    command: npx tsc --noEmit
+    workdir: apps/web
+    description: Run TypeScript type checking
+
+  - id: unit_tests
+    type: task
+    action: exec_command
+    command: npx vitest run --dir src/__tests__/unit
+    workdir: apps/web
+    description: Run unit tests

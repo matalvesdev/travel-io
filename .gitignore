@@ -56,4 +56,14 @@ yarn-error.log*
 .cursor/
 .claude/
 
+# Database files
+*.db
+*.db-journal
+
+# Temp files
+nul
+
+# Next.js auto-generated
+apps/web/next-env.d.ts
+
 
