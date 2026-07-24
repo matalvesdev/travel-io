@@ -144,5 +144,8 @@ describe('DELETE /api/user/delete-account', () => {
         }),
       },
     });
+
+    // Verify session was invalidated
+    expect(mockSupabaseAdmin.auth.admin.signOut).toHaveBeenCalledWith('test-user-id');
   });
 });
