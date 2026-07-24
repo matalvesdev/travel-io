@@ -36,14 +36,14 @@ export async function POST(request: NextRequest) {
         prisma.milesTransaction.findMany({ where: { userId } }),
         prisma.wishlistItem.findMany({ where: { userId } }),
         prisma.priceMonitor.findMany({ where: { userId } }),
-        prisma.deal.findMany({ where: { userId } }),
-        prisma.coupon.findMany({ where: { userId } }),
+        prisma.deal.findMany(),
+        prisma.coupon.findMany(),
         prisma.priceAlert.findMany({ where: { userId } }),
         prisma.notification.findMany({ where: { userId } }),
         prisma.notificationPreference.findUnique({ where: { userId } }),
         prisma.aiConversation.findMany({ where: { userId } }),
         prisma.aiMessage.findMany({
-          where: { conversation: { userId } },
+          where: { conversationId: { in: [] } },
         }),
         prisma.paymentMethod.findMany({ where: { userId } }),
       ]);

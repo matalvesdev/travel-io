@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useProfile, useUpdateProfile } from '@/hooks/api';
 import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
+import { AccountSettings } from '@/components/user/account-settings';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
@@ -117,6 +118,13 @@ export default function ProfilePage() {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
             <p className="text-xs text-muted-foreground mt-3">Clique no ícone para alterar</p>
           </div>
+        </div>
+      </div>
+
+      {/* Account Settings */}
+      <div className="phantom-card">
+        <div className="p-6">
+          <AccountSettings />
         </div>
       </div>
     </motion.div>

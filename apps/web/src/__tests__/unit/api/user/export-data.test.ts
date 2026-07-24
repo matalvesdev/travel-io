@@ -43,14 +43,14 @@ const mockPriceMonitors = [
   { id: '1', userId: 'test-user-id', productName: 'MacBook Pro' },
 ];
 
-const mockDeals = [];
-const mockCoupons = [];
-const mockPriceAlerts = [];
-const mockNotifications = [];
-const mockNotificationPreferences = null;
-const mockAiConversations = [];
-const mockAiMessages = [];
-const mockPaymentMethods = [];
+const mockDeals: any[] = [];
+const mockCoupons: any[] = [];
+const mockPriceAlerts: any[] = [];
+const mockNotifications: any[] = [];
+const mockNotificationPreferences: any = null;
+const mockAiConversations: any[] = [];
+const mockAiMessages: any[] = [];
+const mockPaymentMethods: any[] = [];
 
 // Mock Prisma
 const mockPrisma = {
