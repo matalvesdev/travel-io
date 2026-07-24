@@ -17,6 +17,15 @@ export type {
   Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, ChangePasswordRequest,
 } from './shared';
 
+export type {
+  AccountStatus,
+  AccountDeletionRequest,
+  DataExportLog,
+  ChangeEmailRequest,
+  DeleteAccountRequest,
+  ExportDataResponse,
+} from './user';
+
 export interface SortConfig {
   key: string;
   direction: 'asc' | 'desc';
