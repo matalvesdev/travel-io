@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, TrendingUp, Plane, ShoppingBag,
   Target, MessageSquare, BarChart3, Bell, Settings,
-  ChevronLeft, ChevronRight, LogOut, Sparkles, Map,
+  ChevronLeft, ChevronRight, LogOut, Sparkles, Map, PiggyBank,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth-store';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Finanças', href: '/finance', icon: Wallet },
+  { name: 'Orçamentos', href: '/budget', icon: PiggyBank },
   { name: 'Investimentos', href: '/investments', icon: TrendingUp },
   { name: 'Viagens & Milhas', href: '/travel', icon: Plane },
   { name: 'Minhas Viagens', href: '/trips', icon: Map },
