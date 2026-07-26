@@ -249,6 +249,9 @@ export default function TripsPage() {
 
                 {/* Actions */}
                 <div className="space-y-2">
+                  <Button className="w-full rounded-xl" onClick={() => router.push(`/trips/${viewTrip.id}/bookings`)}>
+                    <Plane className="mr-2 h-4 w-4" /> Reservas
+                  </Button>
                   <Button variant="outline" className="w-full rounded-xl" onClick={() => { navigator.clipboard.writeText(`Viagem: ${viewTrip.name || viewTrip.destination}\n${viewTrip.startDate} a ${viewTrip.endDate}\nTotal: ${formatCurrency(viewTrip.totalCost)}`); toast.success('Copiado!'); }}>
                     <Bookmark className="mr-2 h-4 w-4" /> Compartilhar
                   </Button>
