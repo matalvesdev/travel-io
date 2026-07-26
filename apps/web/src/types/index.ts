@@ -26,6 +26,15 @@ export type {
   ExportDataResponse,
 } from './user';
 
+export type {
+  BookingType,
+  BookingStatus,
+  Booking,
+  CreateBookingInput,
+  UpdateBookingInput,
+  BookingSummary,
+} from './booking';
+
 export interface SortConfig {
   key: string;
   direction: 'asc' | 'desc';
