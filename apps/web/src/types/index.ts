@@ -1,7 +1,7 @@
 export type {
   ApiResponse,
   User,
-  Account, Transaction, Budget, Subscription, ParsedTransaction,
+  Account, Transaction, Subscription, ParsedTransaction,
   Investment, Allocation, Dividend,
   Trip, Flight, Hotel, FlightSearchResult, HotelSearchResult,
   MilesAccount, TransferRoute, Promotion,
@@ -34,6 +34,18 @@ export type {
   UpdateBookingInput,
   BookingSummary,
 } from './booking';
+
+export type {
+  BudgetStatus,
+  BudgetAlertType,
+  Budget,
+  BudgetWithSpent,
+  CreateBudgetInput,
+  UpdateBudgetInput,
+  BudgetAlert,
+  BudgetSummary,
+  BudgetHistoryItem,
+} from './budget';
 
 export interface SortConfig {
   key: string;
