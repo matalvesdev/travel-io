@@ -38,7 +38,6 @@ export type {
 export type {
   BudgetStatus,
   BudgetAlertType,
-  Budget,
   BudgetWithSpent,
   CreateBudgetInput,
   UpdateBudgetInput,
