@@ -37,6 +37,20 @@ model Transaction {
   @@map("transactions")
 }
 
+model Budget {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  category  String
+  limit     Decimal  @db.Decimal(12, 2)
+  month     Int
+  year      Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, category, month, year])
+  @@map("budgets")
+}
+
 model Investment {
   id           String  @id @default(uuid()) @db.Uuid
   userId       String  @map("user_id") @db.Uuid
