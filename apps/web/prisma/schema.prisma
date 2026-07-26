@@ -65,15 +65,57 @@ model Goal {
 }
 
 model Trip {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
   destination String
-  startDate   DateTime @map("start_date") @db.Date
-  endDate     DateTime @map("end_date") @db.Date
-  budget      Decimal? @db.Decimal(12, 2)
-  status      String   @default("planned")
-  createdAt   DateTime @default(now()) @map("created_at")
+  startDate   DateTime  @map("start_date") @db.Date
+  endDate     DateTime  @map("end_date") @db.Date
+  budget      Decimal?  @db.Decimal(12, 2)
+  status      String    @default("planned")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  bookings    Booking[]
   @@map("trips")
+}
+
+model Booking {
+  id              String   @id @default(uuid()) @db.Uuid
+  tripId          String   @map("trip_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  type            String   // "flight" | "hotel"
+  status          String   @default("confirmed") // "pending" | "confirmed" | "cancelled" | "completed"
+
+  // Common fields
+  confirmationCode String? @map("confirmation_code")
+  notes            String?
+
+  // Flight-specific
+  airline          String?
+  flightNumber     String?  @map("flight_number")
+  origin           String?
+  destination      String?
+  departureDate    DateTime? @map("departure_date")
+  arrivalDate      DateTime? @map("arrival_date")
+  departureTime    String?   @map("departure_time")
+  arrivalTime      String?   @map("arrival_time")
+
+  // Hotel-specific
+  hotelName        String?   @map("hotel_name")
+  hotelAddress     String?   @map("hotel_address")
+  checkIn          DateTime?
+  checkOut         DateTime?
+  nights           Int?
+  roomType         String?   @map("room_type")
+
+  // Pricing
+  price            Decimal?  @db.Decimal(12, 2)
+  currency         String?   @default("BRL")
+
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  trip             Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
 }
 
 model MilesAccount {
