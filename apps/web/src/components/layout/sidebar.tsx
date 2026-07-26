@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, TrendingUp, Plane, ShoppingBag,
   Target, MessageSquare, BarChart3, Bell, Settings,
-  ChevronLeft, ChevronRight, LogOut, Sparkles, Map,
+  ChevronLeft, ChevronRight, LogOut, Sparkles, Map, PiggyBank, Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,11 @@ import { useAuthStore } from '@/stores/auth-store';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Finanças', href: '/finance', icon: Wallet },
+  { name: 'Orçamentos', href: '/budget', icon: PiggyBank },
   { name: 'Investimentos', href: '/investments', icon: TrendingUp },
   { name: 'Viagens & Milhas', href: '/travel', icon: Plane },
   { name: 'Minhas Viagens', href: '/trips', icon: Map },
+  { name: 'Wishlist', href: '/wishlist', icon: Heart },
   { name: 'IA Travel', href: '/ai-travel', icon: Sparkles },
   { name: 'Shopping', href: '/shopping', icon: ShoppingBag },
   { name: 'Objetivos', href: '/goals', icon: Target },
@@ -26,80 +28,105 @@ const navigation = [
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
-const bottomNavigation = [
-  { name: 'Notificações', href: '/notifications', icon: Bell },
-  { name: 'Configurações', href: '/settings', icon: Settings },
-];
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
 
-interface SidebarProps { collapsed?: boolean; onToggle?: () => void; }
-
-export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const logout = useAuthStore((s) => s.logout);
-  const user = useAuthStore((s) => s.user);
+  const { user, logout } = useAuthStore();
 
-  const initials = React.useMemo(() => {
-    if (!user?.name) return 'U';
-    const parts = user.name.split(' ').filter(Boolean);
-    return parts.length >= 2
-      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-      : parts[0][0].toUpperCase();
-  }, [user?.name]);
-
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     await logout();
-    router.push('/auth/login');
+    router.push('/login');
   };
+
   return (
-    <motion.aside initial={false} animate={{ width: collapsed ? 72 : 256 }} transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="fixed left-0 top-0 z-40 h-screen phantom-card border-r border-white/5">
-      <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <span className="text-lg font-bold tracking-tight">TRAVEL.IO</span>
-          </Link>
-          <Button variant="ghost" size="icon" onClick={onToggle} className="h-8 w-8">
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
-        </div>
-        <nav className="flex-1 space-y-1 p-2 mt-2">
-          {navigation.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link key={item.name} href={item.href}
-                className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground')}>
-                <item.icon className={cn('h-5 w-5 flex-shrink-0', isActive && 'text-primary')} />
-                {!collapsed && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="border-t border-white/5 p-2">
-          {bottomNavigation.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link key={item.name} href={item.href}
-                className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground')}>
-                <item.icon className={cn('h-5 w-5 flex-shrink-0', isActive && 'text-primary')} />
-                {!collapsed && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
-          <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
-            <div className="relative">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-                <span className="text-sm font-semibold text-white">{initials}</span>
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[hsl(0,0%,10%)] bg-success" />
-            </div>
-            {!collapsed && <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{user?.name || 'Usuário'}</p><p className="text-xs text-muted-foreground">Pro Plan</p></div>}
-            {!collapsed && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLogout}><LogOut className="h-4 w-4" /></Button>}
-          </div>
-        </div>
+    <aside
+      className={cn(
+        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-background transition-all duration-300',
+        collapsed ? 'w-16' : 'w-56'
+      )}
+    >
+      <div className="flex h-14 items-center justify-between border-b px-3">
+        {!collapsed && (
+          <span className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            Travel.io
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onToggle}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
-    </motion.aside>
+
+      <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+        {navigation.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {!collapsed && item.name}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t p-2 space-y-2">
+        <Link
+          href="/notifications"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            pathname === '/notifications'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          )}
+        >
+          <Bell className="h-4 w-4 shrink-0" />
+          {!collapsed && 'Notificações'}
+        </Link>
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            pathname === '/settings'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          )}
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          {!collapsed && 'Configurações'}
+        </Link>
+        {!collapsed && user && (
+          <div className="px-3 py-2 text-xs text-muted-foreground truncate">
+            {user.email}
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && 'Sair'}
+        </Button>
+      </div>
+    </aside>
   );
 }
