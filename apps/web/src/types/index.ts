@@ -17,6 +17,42 @@ export type {
   Session, LoginHistoryEntry, SettingsPlan, PaymentMethod, ChangePasswordRequest,
 } from './shared';
 
+export type {
+  AccountStatus,
+  AccountDeletionRequest,
+  DataExportLog,
+  ChangeEmailRequest,
+  DeleteAccountRequest,
+  ExportDataResponse,
+} from './user';
+
+export type {
+  BookingType,
+  BookingStatus,
+  Booking,
+  CreateBookingInput,
+  UpdateBookingInput,
+  BookingSummary,
+} from './booking';
+
+export type {
+  BudgetStatus,
+  BudgetAlertType,
+  Budget,
+  BudgetWithSpent,
+  CreateBudgetInput,
+  UpdateBudgetInput,
+  BudgetAlert,
+  BudgetSummary,
+  BudgetHistoryItem,
+} from './budget';
+
+export type {
+  WishlistItemType,
+  TravelWishlistItem,
+  CreateWishlistItemInput,
+  UpdateWishlistItemInput,
+} from './wishlist';
 export interface SortConfig {
   key: string;
   direction: 'asc' | 'desc';
