@@ -76,4 +76,7 @@ export interface BookingSummary {
   hotelCount: number;
   confirmedCount: number;
   cancelledCount: number;
+  budget: number | null;
+  remaining: number | null;
+  isOverBudget: boolean;
 }
