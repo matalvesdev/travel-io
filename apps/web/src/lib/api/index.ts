@@ -44,3 +44,6 @@ export type { TravelReferenceData, MilesProgram, MilesRate, CreditCardMiles, Des
 
 export { tripsApi } from './trips';
 export type { Trip as TripType } from './trips';
+
+export { budgetApi } from './budget';
+export type { BudgetResponse, BudgetSummaryResponse, BudgetHistoryResponse } from './budget';
