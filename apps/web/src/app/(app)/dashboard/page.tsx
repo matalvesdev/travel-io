@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown,
@@ -12,9 +13,10 @@ import { Button } from '@/components/ui/button';
 import { useDashboard } from '@/hooks/api';
 import { formatCurrency, formatCompact } from '@/lib/utils/format';
 import { StatsHero } from '@/components/dashboard/stats-hero';
-import { CategoryChart } from '@/components/dashboard/category-chart';
-import { CashFlowChart } from '@/components/dashboard/cash-flow-chart';
 import { NewsSection } from '@/components/dashboard/news-section';
+
+const CategoryChart = dynamic(() => import('@/components/dashboard/category-chart').then(m => m.CategoryChart), { ssr: false });
+const CashFlowChart = dynamic(() => import('@/components/dashboard/cash-flow-chart').then(m => m.CashFlowChart), { ssr: false });
 
 export default function DashboardPage() {
   const [period, setPeriod] = React.useState('ALL');

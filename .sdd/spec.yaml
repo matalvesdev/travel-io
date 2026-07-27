@@ -1,0 +1,7 @@
+version: "1.0"
+phases:
+  plan:
+    approval: required
+approval_methods:
+  - cli
+  - discord

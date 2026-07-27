@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Wallet, Target, Loader2 } from 'lucide-react';
 import { MetricCard } from '@/components/analytics/metric-card';
-import { MonthlyChart } from '@/components/analytics/monthly-chart';
-import { CategoryBreakdown } from '@/components/analytics/category-breakdown';
-import { ForecastChart } from '@/components/analytics/forecast-chart';
+
+const MonthlyChart = dynamic(() => import('@/components/analytics/monthly-chart').then(m => m.MonthlyChart), { ssr: false });
+const CategoryBreakdown = dynamic(() => import('@/components/analytics/category-breakdown').then(m => m.CategoryBreakdown), { ssr: false });
+const ForecastChart = dynamic(() => import('@/components/analytics/forecast-chart').then(m => m.ForecastChart), { ssr: false });
 import { useAnalyticsSummary, useMonthlyData, useCategoryBreakdown, useForecast } from '@/hooks/api/use-analytics';
 import { formatCurrency } from '@/lib/utils';
 

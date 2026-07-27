@@ -45,7 +45,7 @@ function toPersistedGoal(goal: any) {
     requiredMonthlyContribution: Math.round(requiredMonthly * 100) / 100,
     estimatedCompletionDate: estimatedDate ? estimatedDate.toISOString() : '',
     milestones: [],
-    progressHistoryCount: 0,
+    progressHistoryCount: goal.progressHistoryCount ?? 0,
   };
 }
 
@@ -60,11 +60,17 @@ export async function GET(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId }) => {
     const goals = await prisma.goal.findMany({
       where: { userId },
-      include: { progress: true },
+      select: {
+        id: true, name: true, description: true, type: true, icon: true, color: true,
+        targetAmount: true, currentAmount: true, monthlyContribution: true,
+        priority: true, status: true, startDate: true, targetDate: true,
+        createdAt: true,
+        _count: { select: { progress: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
-    const persisted = goals.map(toPersistedGoal);
+    const persisted = goals.map((g) => toPersistedGoal({ ...g, progressHistoryCount: g._count.progress }));
     const totalGoals = persisted.length;
     const activeGoals = persisted.filter((g) => !g.isCompleted).length;
     const totalTarget = persisted.reduce((s, g) => s + g.targetAmount, 0);
@@ -73,11 +79,7 @@ export async function GET(request: NextRequest) {
     return Response.json({
       success: true,
       data: {
-        goals: persisted.map((g) => ({
-          ...g,
-          milestones: [],
-          progressHistoryCount: goals.find((pg) => pg.id === g.id)?.progress.length ?? 0,
-        })),
+        goals: persisted.map((g) => ({ ...g, milestones: [] })),
         totalGoals,
         activeGoals,
         totalTarget,
