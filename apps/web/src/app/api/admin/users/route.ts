@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
             email: true,
             phone: true,
             avatarUrl: true,
-            accountStatus: true,
             createdAt: true,
             updatedAt: true,
           },

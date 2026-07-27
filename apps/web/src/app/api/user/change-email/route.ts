@@ -62,7 +62,6 @@ export async function POST(request: NextRequest) {
         where: { id: userId },
         data: {
           email: newEmail,
-          emailVerified: false,
         },
       });
 
