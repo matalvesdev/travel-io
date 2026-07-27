@@ -67,10 +67,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      - name: Verify build output
+        run: ls -la .next/
       - uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: apps/web/.next/
+          include-hidden-files: true
           retention-days: 1
 
   e2e:
