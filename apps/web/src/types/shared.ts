@@ -410,8 +410,8 @@ export interface Goal {
   monthlyContribution: number;
   startDate: string;
   targetDate: string;
-  daysRemaining: number;
-  monthsRemaining: number;
+  daysRemaining: number | null;
+  monthsRemaining: number | null;
   priority: string;
   status: string;
   isOnTrack: boolean;

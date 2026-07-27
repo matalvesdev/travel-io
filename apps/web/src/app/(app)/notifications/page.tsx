@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { motion } from 'framer-motion';
+
 import { Bell, Check, CheckCheck, Loader2, Filter, Mail, Smartphone, MessageSquare, ShoppingCart, Plane, Target, TrendingUp, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNotifications, useMarkAsRead } from '@/hooks/api/use-notifications';
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Notificações</h1>
@@ -190,6 +190,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

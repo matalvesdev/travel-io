@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Target, Loader2, BarChart3, Clock, CheckCircle2 } from 'lucide-react';
+
+import { Plus, Target, Loader2, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useAddGoalProgress } from '@/hooks/api/use-goals';
@@ -62,7 +62,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -110,11 +110,10 @@ export default function GoalsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal, i) => (
-            <motion.div
+            <div
               key={goal.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              style={{ animationDelay: `${i * 0.1}s` }}
+              className="animate-fade-in-up-20"
             >
               <GoalCard
                 goal={goal}
@@ -122,7 +121,7 @@ export default function GoalsPage() {
                 onDelete={handleDeleteGoal}
                 onContribute={(g) => setContributingGoal(g)}
               />
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -144,6 +143,6 @@ export default function GoalsPage() {
           onClose={() => setContributingGoal(null)}
         />
       )}
-    </motion.div>
+    </div>
   );
 }

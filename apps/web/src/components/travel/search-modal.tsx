@@ -6,7 +6,7 @@ import { X, ArrowRight, ArrowLeft, Loader2, MapPin, Calendar, Users, Plane, Buil
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useFlightSearchTrigger, useHotelSearchTrigger, useCreateTrip } from '@/hooks/api/use-travel';
+import { useFlightSearchTrigger, useHotelSearchTrigger, useCreateTrip, useAddTripFlight, useAddTripHotel } from '@/hooks/api/use-travel';
 import { FlightResults } from '@/components/travel/flight-results';
 import { HotelResults } from '@/components/travel/hotel-results';
 import { toast } from 'sonner';
@@ -48,6 +48,8 @@ export function SearchModal({ onClose }: SearchModalProps) {
   const flightSearch = useFlightSearchTrigger();
   const hotelSearch = useHotelSearchTrigger();
   const createTrip = useCreateTrip();
+  const addFlight = useAddTripFlight();
+  const addHotel = useAddTripHotel();
 
   const steps: Step[] = ['plan', 'flights', 'hotels', 'confirm'];
   const stepIndex = steps.indexOf(step);
@@ -92,13 +94,44 @@ export function SearchModal({ onClose }: SearchModalProps) {
 
   const handleSaveTrip = async () => {
     try {
-      await createTrip.mutateAsync({
+      const res = await createTrip.mutateAsync({
         name: `${plan.origin} → ${plan.destination}`,
         destination: plan.destination,
         startDate: plan.departureDate,
         endDate: plan.returnDate || plan.departureDate,
-        notes: `Voo: ${selectedFlight?.airline || ''} ${selectedFlight?.flightNumber || ''} | Hotel: ${selectedHotel?.name || ''}`,
       });
+
+      const tripId = res.data?.id;
+      if (!tripId) throw new Error('ID da viagem não retornado');
+
+      if (selectedFlight) {
+        await addFlight.mutateAsync({
+          tripId,
+          airline: selectedFlight.airline,
+          flightNumber: selectedFlight.flightNumber,
+          origin: plan.origin,
+          destination: plan.destination,
+          departure: selectedFlight.departure || plan.departureDate,
+          arrival: selectedFlight.arrival || plan.departureDate,
+          price: selectedFlight.price || 0,
+          duration: selectedFlight.duration,
+          stops: selectedFlight.stops ?? 0,
+        });
+      }
+
+      if (selectedHotel) {
+        await addHotel.mutateAsync({
+          tripId,
+          name: selectedHotel.name,
+          address: selectedHotel.address,
+          price: selectedHotel.price || 0,
+          rating: selectedHotel.rating,
+          checkIn: plan.departureDate,
+          checkOut: plan.returnDate || plan.departureDate,
+          guests: plan.travelers,
+        });
+      }
+
       toast.success('Viagem salva com sucesso!');
       onClose();
     } catch {

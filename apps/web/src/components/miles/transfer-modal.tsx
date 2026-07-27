@@ -5,7 +5,7 @@ import { ArrowRight, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTransferMiles, useMilesBalance } from '@/hooks/api/use-miles';
+import { useTransferMiles, useMilesBalance, useTransferRoutes } from '@/hooks/api/use-miles';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -20,19 +20,13 @@ const PROGRAM_OPTIONS = [
   { value: 'AZUL_FIDELIDADE', label: 'Azul Fidelidade' },
 ];
 
-const CONVERSION_RATES: Record<string, Record<string, number>> = {
-  SMILES: { LIVELO: 1, LATAM_PASS: 1, AZUL_FIDELIDADE: 0.9 },
-  LIVELO: { SMILES: 1, LATAM_PASS: 1, AZUL_FIDELIDADE: 1.2 },
-  LATAM_PASS: { SMILES: 1, LIVELO: 1, AZUL_FIDELIDADE: 0.95 },
-  AZUL_FIDELIDADE: { SMILES: 1.1, LIVELO: 0.85, LATAM_PASS: 1 },
-};
-
 export function TransferModal({ isOpen, onClose, fromProgram }: TransferModalProps) {
   const [from, setFrom] = React.useState(fromProgram || 'SMILES');
   const [to, setTo] = React.useState('LIVELO');
   const [amount, setAmount] = React.useState('');
 
   const { data: balanceData } = useMilesBalance();
+  const { data: routes = [] } = useTransferRoutes();
   const transferMutation = useTransferMiles();
 
   React.useEffect(() => {
@@ -46,7 +40,8 @@ export function TransferModal({ isOpen, onClose, fromProgram }: TransferModalPro
   }, [fromProgram]);
 
   const numericAmount = parseInt(amount, 10) || 0;
-  const rate = CONVERSION_RATES[from]?.[to] || 1;
+  const activeRoute = routes.find((r) => r.fromProgram === from && r.toProgram === to);
+  const rate = activeRoute?.conversionRate || 1;
   const result = Math.floor(numericAmount * rate);
   const sourceBalance = balanceData?.programs.find((p) => p.program === from)?.balance || 0;
   const hasEnough = numericAmount > 0 && numericAmount <= sourceBalance;

@@ -2,14 +2,13 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+
 import { Loader2, ArrowLeft, Mail, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 
-const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } } };
-const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
+
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = React.useState('');
@@ -39,16 +38,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-background">
-      <motion.div variants={stagger} initial="hidden" animate="visible" className="w-full max-w-md">
-        <motion.div variants={fadeUp}>
+      <div className="w-full max-w-md">
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.12s' }}>
           <Link href="/auth/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="h-4 w-4" />
             Voltar ao login
           </Link>
-        </motion.div>
+        </div>
 
         {sent ? (
-          <motion.div variants={fadeUp}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.06s' }}>
             <div className="rounded-xl bg-success/10 p-4 mb-6 flex items-center gap-3">
               <div className="rounded-full bg-success/20 p-2">
                 <Check className="h-5 w-5 text-success" />
@@ -65,15 +64,15 @@ export default function ForgotPasswordPage() {
             <Button variant="outline" className="w-full" onClick={() => { setSent(false); setEmail(''); }}>
               Enviar novamente
             </Button>
-          </motion.div>
+          </div>
         ) : (
           <>
-            <motion.div variants={fadeUp}>
+        <div className="animate-fade-in-up">
               <h2 className="text-2xl font-bold">Esqueceu a senha?</h2>
               <p className="text-muted-foreground mt-1">Digite seu email para redefinir sua senha</p>
-            </motion.div>
+            </div>
 
-            <motion.form variants={fadeUp} onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <form onSubmit={handleSubmit} className="animate-fade-in-up mt-6 space-y-4" style={{ animationDelay: '0.18s' }}>
               {error && (
                 <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
               )}
@@ -100,10 +99,10 @@ export default function ForgotPasswordPage() {
                   'Enviar link de redefinição'
                 )}
               </Button>
-            </motion.form>
+            </form>
           </>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

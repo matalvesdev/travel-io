@@ -27,13 +27,13 @@ export async function GET(request: NextRequest) {
 
         const { data: tripData } = await supabase
           .from('trips')
-          .select('budget')
-          .not('budget', 'is', null)
+          .select('total_cost')
+          .not('total_cost', 'is', null)
           .eq('user_id', user.id)
           .limit(5);
 
         if (tripData && tripData.length > 0) {
-          averageCost = tripData.reduce((sum, t) => sum + Number(t.budget), 0) / tripData.length;
+          averageCost = tripData.reduce((sum, t) => sum + Number(t.total_cost), 0) / tripData.length;
         }
       }
     } catch (e) {

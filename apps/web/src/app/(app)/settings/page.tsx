@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+
+import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { Bell, Shield, Palette, Loader2, Check, X, LogOut, AlertTriangle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,7 +122,7 @@ export default function SettingsPage() {
   const sessions = sessionsData?.sessions || [];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex items-center justify-between">
@@ -139,20 +140,20 @@ export default function SettingsPage() {
           { id: 'notifications', title: 'Notificações', desc: 'Preferências', icon: Bell, color: 'text-warning', bg: 'bg-warning/10' },
           { id: 'appearance', title: 'Aparência', desc: 'Tema', icon: Palette, color: 'text-purple-500', bg: 'bg-purple-500/10' },
         ].map((s, i) => (
-          <motion.div key={s.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -1 }}>
+          <div key={s.id} style={{ animationDelay: `${i * 0.1}s` }} className="animate-fade-in-up-20 card-hover">
             <div className={cn('phantom-card cursor-pointer hover:bg-muted/50', activeSection === s.id && 'ring-2 ring-primary')} onClick={() => setActiveSection(activeSection === s.id ? null : s.id)}>
               <div className="flex items-center gap-4 p-6">
                 <div className={cn('rounded-xl p-3', s.bg)}><s.icon className={cn('h-6 w-6', s.color)} /></div>
                 <div className="flex-1"><h3 className="font-semibold">{s.title}</h3><p className="text-sm text-muted-foreground">{s.desc}</p></div>
               </div>
             </div>
-          </motion.div>
+            </div>
         ))}
       </div>
 
       {/* Profile Section */}
       {activeSection === 'profile' && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+        <div className="animate-fade-in">
           <div className="phantom-card">
             <div className="p-6 pb-0"><h3 className="text-lg font-semibold">Perfil</h3></div>
             <div className="p-6 space-y-4">
@@ -175,7 +176,7 @@ export default function SettingsPage() {
               </div>
               {profile?.avatarUrl && (
                 <div className="flex items-center gap-3">
-                  <img src={profile.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full" />
+                  <Image src={profile.avatarUrl} alt="Avatar" width={48} height={48} className="h-12 w-12 rounded-full" />
                   <span className="text-sm text-muted-foreground">Avatar via OAuth</span>
                 </div>
               )}
@@ -185,12 +186,12 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Security Section */}
       {activeSection === 'security' && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+        <div className="animate-fade-in">
           <div className="phantom-card">
             <div className="p-6 pb-0"><h3 className="text-lg font-semibold">Segurança</h3></div>
             <div className="p-6 space-y-3">
@@ -204,12 +205,12 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Notifications Section */}
       {activeSection === 'notifications' && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+        <div className="animate-fade-in">
           <div className="phantom-card">
             <div className="p-6 pb-0"><h3 className="text-lg font-semibold">Notificações</h3></div>
             <div className="p-6 space-y-4">
@@ -231,12 +232,12 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Appearance Section */}
       {activeSection === 'appearance' && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+        <div className="animate-fade-in">
           <div className="phantom-card">
             <div className="p-6 pb-0"><h3 className="text-lg font-semibold">Aparência</h3></div>
             <div className="p-6 space-y-4">
@@ -250,7 +251,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Password Modal */}
@@ -314,6 +315,6 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

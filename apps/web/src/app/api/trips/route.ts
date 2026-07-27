@@ -1,104 +1,117 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { authenticatedHandler } from '@/lib/api/supabase-helpers';
-import { prisma } from '@/lib/db';
 
-const createTripSchema = z.object({
-  destination: z.string().min(1, 'Destino é obrigatório'),
-  startDate: z.string().min(1, 'Data de início é obrigatória'),
-  endDate: z.string().min(1, 'Data de término é obrigatória'),
-  budget: z.number().positive('Orçamento deve ser maior que 0').optional(),
-  status: z.string().optional(),
-});
+function toSnakeCase(body: Record<string, unknown>): Record<string, unknown> {
+  const map: Record<string, string> = {
+    name: 'name',
+    destination: 'destination',
+    startDate: 'start_date',
+    endDate: 'end_date',
+    totalCost: 'total_cost',
+    notes: 'notes',
+    status: 'status',
+    user_id: 'user_id',
+  };
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    const dbKey = map[key] || key;
+    result[dbKey] = value;
+  }
+  return result;
+}
 
-const updateTripSchema = z.object({
-  id: z.string().min(1, 'ID é obrigatório'),
-  status: z.string().optional(),
-  destination: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  budget: z.number().optional(),
-});
+const DB_FIELDS = ['id', 'name', 'destination', 'start_date', 'end_date', 'notes', 'total_cost', 'status', 'created_at', 'updated_at', 'user_id'];
+
+function toCamelCase(row: Record<string, unknown>) {
+  const map: Record<string, string> = {
+    start_date: 'startDate',
+    end_date: 'endDate',
+    total_cost: 'totalCost',
+    user_id: 'userId',
+    created_at: 'createdAt',
+    updated_at: 'updatedAt',
+  };
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    result[map[key] || key] = value;
+  }
+  return result;
+}
 
 export async function GET(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId }) => {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    const data = await prisma.trip.findMany({
-      where: {
-        userId,
-        ...(status ? { status } : {}),
-      },
-      orderBy: { startDate: 'desc' },
-    });
+    let query = supabase
+      .from('trips')
+      .select('*')
+      .eq('user_id', userId)
+      .order('start_date', { ascending: false });
 
-    return Response.json({ success: true, data: { trips: data } });
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query;
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+
+    const trips = (data || []).map(toCamelCase);
+    return Response.json({ success: true, data: { trips } });
   });
 }
 
 export async function POST(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId }) => {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
     const body = await request.json();
-    const parsed = createTripSchema.safeParse(body);
-    if (!parsed.success) {
-      return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
-    }
+    const dbBody = toSnakeCase({ ...body, user_id: userId });
 
-    const data = await prisma.trip.create({
-      data: {
-        destination: parsed.data.destination,
-        startDate: new Date(parsed.data.startDate),
-        endDate: new Date(parsed.data.endDate),
-        budget: parsed.data.budget ?? null,
-        status: parsed.data.status ?? 'planned',
-        userId,
-      },
-    });
+    const { data, error } = await supabase
+      .from('trips')
+      .insert(dbBody)
+      .select()
+      .single();
 
-    return Response.json({ success: true, data });
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, data: toCamelCase(data) });
   });
 }
 
 export async function PATCH(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId }) => {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
     const body = await request.json();
-    const parsed = updateTripSchema.safeParse(body);
-    if (!parsed.success) {
-      return Response.json({ success: false, message: parsed.error.errors[0].message }, { status: 400 });
-    }
+    const { id, ...updates } = body;
+    if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
 
-    const { id, startDate, endDate, ...rest } = parsed.data;
-    const existing = await prisma.trip.findFirst({ where: { id, userId } });
-    if (!existing) {
-      return Response.json({ success: false, message: 'Viagem não encontrada' }, { status: 404 });
-    }
+    const dbUpdates = toSnakeCase(updates);
+    const { data, error } = await supabase
+      .from('trips')
+      .update(dbUpdates)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
 
-    const data = await prisma.trip.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(startDate ? { startDate: new Date(startDate) } : {}),
-        ...(endDate ? { endDate: new Date(endDate) } : {}),
-      },
-    });
-
-    return Response.json({ success: true, data });
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true, data: toCamelCase(data) });
   });
 }
 
 export async function DELETE(request: NextRequest) {
-  return authenticatedHandler(request, async ({ userId }) => {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
 
-    const existing = await prisma.trip.findFirst({ where: { id, userId } });
-    if (!existing) {
-      return Response.json({ success: false, message: 'Viagem não encontrada' }, { status: 404 });
-    }
+    const { error } = await supabase
+      .from('trips')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
-    await prisma.trip.delete({ where: { id } });
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, message: 'Viagem excluída' });
   });
+}
+
+export async function PUT(request: NextRequest) {
+  return PATCH(request);
 }

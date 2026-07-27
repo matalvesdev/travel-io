@@ -47,3 +47,6 @@ export type { Trip as TripType } from './trips';
 
 export { budgetApi } from './budget';
 export type { BudgetResponse, BudgetSummaryResponse, BudgetHistoryResponse } from './budget';
+
+export { wishlistApi } from './wishlist';
+export type { WishlistResponse } from './wishlist';

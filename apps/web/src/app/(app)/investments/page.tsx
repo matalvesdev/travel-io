@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Loader2, Search, X, Check, TrendingUp, TrendingDown,
@@ -38,9 +39,11 @@ function BrApiLogo({ symbol }: { symbol: string }) {
       </div>
     );
   return (
-    <img
+    <Image
       src={`https://brapi.dev/api/v1/logo/${symbol}?size=64`}
       alt={symbol}
+      width={32}
+      height={32}
       className="h-8 w-8 rounded-lg object-contain bg-muted/30 p-0.5"
       onError={() => setFailed(true)}
     />

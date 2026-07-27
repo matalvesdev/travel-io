@@ -15,7 +15,7 @@ export async function getTrips(filter?: string) {
 }
 
 export async function createTrip(data: { name: string; destination: string; startDate: string; endDate: string; notes?: string }) {
-  return apiClient.post<ApiResponse<{ tripId: string }>>('/api/trips', data);
+  return apiClient.post<ApiResponse<{ id: string }>>('/api/trips', data);
 }
 
 export async function updateTrip(id: string, data: Partial<Trip>) {
@@ -24,6 +24,22 @@ export async function updateTrip(id: string, data: Partial<Trip>) {
 
 export async function deleteTrip(id: string) {
   return apiClient.delete<ApiResponse<{ message: string }>>(`/api/trips?id=${id}`);
+}
+
+export async function addTripFlight(data: {
+  tripId: string; airline: string; flightNumber?: string;
+  origin: string; destination: string; departure: string; arrival: string;
+  price: number; currency?: string; duration?: string; stops?: number;
+}) {
+  return apiClient.post<ApiResponse<any>>('/api/trips/flights', data);
+}
+
+export async function addTripHotel(data: {
+  tripId: string; name: string; address?: string;
+  price: number; currency?: string; rating?: number;
+  checkIn?: string; checkOut?: string; guests?: number;
+}) {
+  return apiClient.post<ApiResponse<any>>('/api/trips/hotels', data);
 }
 
 export async function searchFlights(params: { origin: string; destination: string; departureDate: string; adults?: number }) {
@@ -69,6 +85,22 @@ export function useDeleteTrip() {
   return useMutation({
     mutationFn: deleteTrip,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trips'] }),
+  });
+}
+
+export function useAddTripFlight() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addTripFlight,
+    onSuccess: (_data, variables) => queryClient.invalidateQueries({ queryKey: ['trip-flights', variables.tripId] }),
+  });
+}
+
+export function useAddTripHotel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addTripHotel,
+    onSuccess: (_data, variables) => queryClient.invalidateQueries({ queryKey: ['trip-hotels', variables.tripId] }),
   });
 }
 

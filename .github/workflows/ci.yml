@@ -5,64 +5,65 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
 
 jobs:
-  test:
-    name: Test
+  typecheck:
+    name: Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps --ignore-scripts
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
         working-directory: apps/web
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/web
-
-      - name: Run unit tests
-        run: npm run test:unit
-        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm test
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: test
-
+    timeout-minutes: 10
+    needs: [typecheck, test]
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
           cache-dependency-path: apps/web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps --ignore-scripts
-        working-directory: apps/web
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/web
-
-      - name: Build
-        run: npm run build
-        working-directory: apps/web
+      - run: npm ci
+      - run: npm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}

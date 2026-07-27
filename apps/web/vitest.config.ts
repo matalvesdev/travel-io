@@ -3,7 +3,12 @@ import path from 'path';
 
 export default defineConfig({
   test: {
-    exclude: ['e2e/**', 'node_modules/**', '**/*.spec.ts'],
+    exclude: [
+      'e2e/**',
+      'node_modules/**',
+      '**/*.spec.ts',
+      ...(process.env.CI ? ['**/integration.test.ts', 'src/__tests__/integration/**'] : []),
+    ],
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.ts'],

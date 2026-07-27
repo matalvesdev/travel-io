@@ -1,8 +1,9 @@
 'use client';
 import * as React from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Plane, Hotel, Coffee, Map, Navigation } from 'lucide-react';
 import { CITY_TO_AIRPORT } from '@/lib/data/cities';
-import { tripsApi, milesApi, apiClient, referenceDataApi } from '@/lib/api';
+import { tripsApi, milesApi, referenceDataApi } from '@/lib/api';
 import type { TravelReferenceData } from '@/lib/api';
 
 export type Step = 'plan' | 'flights' | 'hotels' | 'confirm' | 'itinerary' | 'miles' | 'saved';
@@ -85,28 +86,38 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [refData, setRefData] = React.useState<TravelReferenceData | null>(null);
 
-  React.useEffect(() => {
-    referenceDataApi.get().then(res => { if (res.success && res.data?.data) setRefData(res.data.data); }).catch(() => {});
-    milesApi.getBalance().then(res => {
-      if (res.success && res.data?.programs) {
-        setMilesAccounts(res.data.programs.map((a: any) => ({
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ['reference-data'],
+        queryFn: () => referenceDataApi.get().then(r => r.success && r.data?.data ? r.data.data : null),
+        staleTime: 10 * 60 * 1000,
+      },
+      {
+        queryKey: ['miles-balance'],
+        queryFn: () => milesApi.getBalance().then(r => r.success && r.data?.programs ? r.data.programs.map((a: any) => ({
           program: a.programName || a.program, balance: a.balance,
           expiring: a.expiringIn30Days || 0, expiryDate: a.expiringDate || '', color: '#6366f1',
-        })));
-      }
-    }).catch(() => {});
-    tripsApi.getTrips().then(res => {
-      if (res.success && res.data?.trips) {
-        setSavedTrips(res.data.trips.map((t: any) => ({
+        })) : []),
+        staleTime: 2 * 60 * 1000,
+      },
+      {
+        queryKey: ['saved-trips'],
+        queryFn: () => tripsApi.getTrips().then(r => r.success && r.data?.trips ? r.data.trips.map((t: any) => ({
           id: t.id, origin: '—', destination: t.destination,
-          startDate: t.start_date, endDate: t.end_date,
-          flight: null, hotel: null, totalCost: t.budget || 0, nights: 0,
-          savedAt: t.created_at || new Date().toISOString(),
+          startDate: t.startDate, endDate: t.endDate,
+          flight: null, hotel: null, totalCost: t.totalCost || 0, nights: 0,
+          savedAt: t.createdAt || new Date().toISOString(),
           status: (t.status === 'planned' ? 'planejada' : t.status === 'ongoing' ? 'em andamento' : t.status === 'completed' ? 'concluída' : 'planejada') as SavedTrip['status'],
-        })));
-      }
-    }).catch(() => {});
-  }, []);
+        })) : []),
+        staleTime: 60 * 1000,
+      },
+    ],
+  });
+
+  React.useEffect(() => { if (queries[0].data) setRefData(queries[0].data); }, [queries[0].data]);
+  React.useEffect(() => { if (queries[1].data) setMilesAccounts(queries[1].data); }, [queries[1].data]);
+  React.useEffect(() => { if (queries[2].data) setSavedTrips(queries[2].data); }, [queries[2].data]);
 
   const showToast = (m: string, t: 'success' | 'error' = 'success') => { setToast({ message: m, type: t }); setTimeout(() => setToast(null), 3000); };
 
@@ -164,7 +175,7 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
   const handleSaveTrip = async () => {
     const trip: SavedTrip = { id: `trip-${Date.now()}`, origin, destination, startDate, endDate, flight: selectedFlight, hotel: selectedHotel, totalCost, nights, savedAt: new Date().toISOString(), status: 'planejada' };
     try {
-      await tripsApi.createTrip({ destination, start_date: startDate, end_date: endDate, budget: totalCost, status: 'planned' });
+      await tripsApi.createTrip({ destination, startDate, endDate, totalCost, status: 'planned' });
       const updated = [...savedTrips, trip]; setSavedTrips(updated); setStep('saved');
       showToast('Viagem salva com sucesso!');
     } catch { showToast('Erro ao salvar viagem', 'error'); }

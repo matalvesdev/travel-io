@@ -1,7 +1,7 @@
 export type {
   ApiResponse,
   User,
-  Account, Transaction, Subscription, ParsedTransaction,
+  Account, Transaction, Budget, Subscription, ParsedTransaction,
   Investment, Allocation, Dividend,
   Trip, Flight, Hotel, FlightSearchResult, HotelSearchResult,
   MilesAccount, TransferRoute, Promotion,
@@ -38,7 +38,6 @@ export type {
 export type {
   BudgetStatus,
   BudgetAlertType,
-  Budget,
   BudgetWithSpent,
   CreateBudgetInput,
   UpdateBudgetInput,
@@ -47,6 +46,12 @@ export type {
   BudgetHistoryItem,
 } from './budget';
 
+export type {
+  WishlistItemType,
+  TravelWishlistItem,
+  CreateWishlistItemInput,
+  UpdateWishlistItemInput,
+} from './wishlist';
 export interface SortConfig {
   key: string;
   direction: 'asc' | 'desc';

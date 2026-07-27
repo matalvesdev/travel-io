@@ -27,6 +27,13 @@ export interface TransactionEntry {
   date: string;
 }
 
+export interface MilesSummary {
+  totalMiles: number;
+  expiringMiles: number;
+  milesValue: number;
+  balances: { program: string; balance: number; monetaryValue: number }[];
+}
+
 export interface DashboardSummary {
   financialSummary: {
     totalRevenue: number;
@@ -37,6 +44,7 @@ export interface DashboardSummary {
   };
   goals: { total: number; completed: number };
   trips: { planned: number; completed: number };
+  miles: MilesSummary;
   barData: BarDataEntry[];
   categoryBreakdown: CategoryBreakdownEntry[];
   cashFlowTrend: CashFlowTrendEntry[];

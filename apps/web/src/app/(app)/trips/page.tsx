@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, Hotel, Calendar, MapPin, Star, Trash2, Check, X, ChevronRight, Sparkles, Wallet, TrendingUp, Target, CreditCard, ArrowRight, Plus, Search, Map, Loader2, Eye, Bookmark } from 'lucide-react';
+import { Plane, Calendar, MapPin, Trash2, Check, X, Sparkles, Wallet, TrendingUp, Target, CreditCard, Plus, Search, Map, Loader2, Eye, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { MetricCard } from '@/components/analytics/metric-card';

@@ -1,14 +1,18 @@
 'use client';
 
 import * as React from 'react';
-import { Award, ArrowRightLeft, AlertCircle, Loader2, Wallet, Clock, TrendingUp, Gift } from 'lucide-react';
+import { Award, ArrowRightLeft, AlertCircle, Loader2, Wallet, Clock, TrendingUp, Gift, Bot } from 'lucide-react';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { BalanceCard } from '@/components/miles/balance-card';
 import { SavingsCalculator } from '@/components/miles/savings-calculator';
+import { MilesFlightSearch } from '@/components/miles/miles-flight-search';
 import { PromotionsList } from '@/components/miles/promotions-list';
+import { TransactionsTimeline } from '@/components/miles/transactions-timeline';
 import { TransferModal } from '@/components/miles/transfer-modal';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMilesBalance, usePromotions } from '@/hooks/api/use-miles';
+import { optimizeMilesRedemption } from '@/lib/api/hf';
 import { formatCurrency } from '@/lib/utils';
 
 export default function MilesPage() {
@@ -23,6 +27,12 @@ export default function MilesPage() {
   const totalValue = programs.reduce((a, p) => a + p.monetaryValue, 0);
   const activePrograms = programs.filter((p) => p.balance > 0).length;
   const totalExpiring = balanceData?.totalExpiring || programs.reduce((a, p) => a + p.expiringIn30Days, 0);
+
+  const [aiStrategies, setAiStrategies] = React.useState<{ strategy: string; description: string; savings: number }[]>([]);
+
+  React.useEffect(() => {
+    optimizeMilesRedemption(totalMiles, 5000).then(setAiStrategies);
+  }, [totalMiles]);
 
   if (isLoading) {
     return (
@@ -91,6 +101,32 @@ export default function MilesPage() {
         />
       </div>
 
+      {/* AI Optimization */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            Otimização com IA
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {aiStrategies.map((strategy) => (
+              <div
+                key={strategy.strategy}
+                className="rounded-xl border p-4 space-y-2 transition-all hover:shadow-md"
+              >
+                <h4 className="text-sm font-semibold">{strategy.strategy}</h4>
+                <p className="text-xs text-muted-foreground line-clamp-2">{strategy.description}</p>
+                <p className="text-lg font-bold text-primary">
+                  R$ {strategy.savings.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left Column */}
@@ -101,8 +137,12 @@ export default function MilesPage() {
         </div>
 
         {/* Right Column */}
-        <div>
+        <div className="space-y-6">
           <SavingsCalculator totalMiles={totalMiles} />
+
+          <MilesFlightSearch />
+
+          <TransactionsTimeline transactions={balanceData?.transactions || []} />
         </div>
       </div>
 

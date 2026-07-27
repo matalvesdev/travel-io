@@ -15,6 +15,7 @@ export function useDashboard() {
         financialSummary: { totalRevenue: 0, totalExpenses: 0, balance: 0, totalInvested: 0, totalPortfolio: 0 },
         goals: { total: 0, completed: 0 },
         trips: { planned: 0, completed: 0 },
+        miles: { totalMiles: 0, expiringMiles: 0, milesValue: 0, balances: [] },
         barData: [],
         categoryBreakdown: [],
         cashFlowTrend: [],

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Plane, MapPin, Calendar, DollarSign, Building2 } from 'lucide-react';
+import { MapPin, Calendar, DollarSign } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Trip } from '@/hooks/api/use-travel';
@@ -88,25 +88,12 @@ export function TripCard({ trip, onClick }: TripCardProps) {
             </div>
           )}
 
-          {/* Flight & Hotel Summary */}
-          {(trip as any).flights?.length > 0 || (trip as any).hotels?.length > 0 ? (
+          {/* Trip notes */}
+          {trip.notes && (
             <div className="mt-3 border-t pt-3">
-              <div className="flex gap-3 text-xs text-muted-foreground">
-                {(trip as any).flights?.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Plane className="h-3 w-3" />
-                    {(trip as any).flights.length} voo(s)
-                  </span>
-                )}
-                {(trip as any).hotels?.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
-                    {(trip as any).hotels.length} hotel(is)
-                  </span>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2">{trip.notes}</p>
             </div>
-          ) : null}
+          )}
         </CardContent>
       </Card>
     </motion.div>

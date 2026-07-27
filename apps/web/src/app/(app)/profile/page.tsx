@@ -1,13 +1,13 @@
 'use client';
 import * as React from 'react';
-import { motion } from 'framer-motion';
+
+import Image from 'next/image';
 import { User, Loader2, Check, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useProfile, useUpdateProfile } from '@/hooks/api';
 import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
-import { AccountSettings } from '@/components/user/account-settings';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
@@ -69,7 +69,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Perfil</h1>
@@ -109,7 +109,7 @@ export default function ProfilePage() {
           <div className="p-6 flex flex-col items-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden">
-                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="h-full w-full object-cover" /> : <User className="h-12 w-12" />}
+                {profile?.avatarUrl ? <Image src={profile.avatarUrl} alt="Avatar" width={96} height={96} className="h-full w-full object-cover" /> : <User className="h-12 w-12" />}
               </div>
               <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg hover:bg-primary/90 transition-colors">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
@@ -120,13 +120,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* Account Settings */}
-      <div className="phantom-card">
-        <div className="p-6">
-          <AccountSettings />
-        </div>
-      </div>
-    </motion.div>
+    </div>
   );
 }

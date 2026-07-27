@@ -67,3 +67,11 @@ nul
 apps/web/next-env.d.ts
 
 
+
+# Database files
+*.db
+.mycli.db
+
+# Dev tools
+.sdd/
+mycli.exe
