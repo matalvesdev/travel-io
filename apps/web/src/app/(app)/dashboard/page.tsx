@@ -4,7 +4,7 @@ import * as React from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown,
-  Loader2, RefreshCw, Wallet, Target, Plane,
+  Loader2, RefreshCw, Wallet, Target, Plane, Award,
   Calendar,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +44,7 @@ export default function DashboardPage() {
   const fin = data?.financialSummary || { totalRevenue: 0, totalExpenses: 0, balance: 0, totalInvested: 0, totalPortfolio: 0 };
   const goalsData = data?.goals || { total: 0, completed: 0 };
   const tripsData = data?.trips || { planned: 0, completed: 0 };
+  const milesData = data?.miles || { totalMiles: 0, expiringMiles: 0, milesValue: 0, balances: [] };
   const categoryBreakdown = data?.categoryBreakdown || [];
   const cashFlowTrend = data?.cashFlowTrend || [];
   const transactions = data?.transactions || [];
@@ -234,6 +235,38 @@ export default function DashboardPage() {
                 <div className="pt-2 border-t">
                   <p className="text-2xl font-bold">{tripsData.planned + tripsData.completed}</p>
                   <p className="text-xs text-muted-foreground">total de viagens</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Miles Card */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Award className="h-4 w-4 text-muted-foreground" />
+                Milhas & Pontos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total de milhas</span>
+                  <span className="font-semibold">{milesData.totalMiles.toLocaleString('pt-BR')}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Valor estimado</span>
+                  <span className="font-semibold text-success">{formatCurrency(milesData.milesValue)}</span>
+                </div>
+                {milesData.expiringMiles > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Expirando</span>
+                    <span className="font-semibold text-amber-500">{milesData.expiringMiles.toLocaleString('pt-BR')}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t">
+                  <p className="text-2xl font-bold">{milesData.balances.length}</p>
+                  <p className="text-xs text-muted-foreground">programas ativos</p>
                 </div>
               </div>
             </CardContent>

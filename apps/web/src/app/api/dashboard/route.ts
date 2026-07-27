@@ -16,14 +16,15 @@ interface CashFlowChartData {
 
 export async function GET(request: NextRequest) {
   return authenticatedHandler(request, async ({ userId, supabase }) => {
-    const [transactionsRes, investmentsRes, goalsRes, tripsRes] = await Promise.all([
+    const [transactionsRes, investmentsRes, goalsRes, tripsRes, milesRes] = await Promise.all([
       supabase.from('transactions').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }),
       supabase.from('investments').select('quantity,avg_cost,current_price').eq('user_id', userId),
       supabase.from('goals').select('current_amount,target_amount,status').eq('user_id', userId),
       supabase.from('trips').select('id,status').eq('user_id', userId),
+      supabase.from('miles').select('program,balance,expiring_in_30_days').eq('user_id', userId),
     ]);
 
-    const errors = [transactionsRes, investmentsRes, goalsRes, tripsRes].find((r) => r.error);
+    const errors = [transactionsRes, investmentsRes, goalsRes, tripsRes, milesRes].find((r) => r.error);
     if (errors?.error) return Response.json({ success: false, message: errors.error.message }, { status: 500 });
 
     const isIncome = (t: any) => (t.type || '').toUpperCase() === 'INCOME';
@@ -90,12 +91,26 @@ export async function GET(request: NextRequest) {
       cashFlowTrend.push({ month: monthLabel, income, expenses });
     }
 
+    const milesData = milesRes.data || [];
+    const totalMiles = milesData.reduce((sum: number, m: any) => sum + Number(m.balance), 0);
+    const expiringMiles = milesData.reduce((sum: number, m: any) => sum + Number(m.expiring_in_30_days || 0), 0);
+
     return Response.json({
       success: true,
       data: {
         financialSummary: { totalRevenue, totalExpenses, balance: totalRevenue - totalExpenses, totalInvested, totalPortfolio },
         goals: { total: totalGoals, completed: completedGoals },
         trips: { planned: tripsPlanned, completed: tripsCompleted },
+        miles: {
+          totalMiles,
+          expiringMiles,
+          milesValue: totalMiles * 0.025,
+          balances: milesData.map((m: any) => ({
+            program: m.program,
+            balance: Number(m.balance),
+            monetaryValue: Number(m.balance) * 0.025,
+          })),
+        },
         barData,
         categoryBreakdown,
         cashFlowTrend,

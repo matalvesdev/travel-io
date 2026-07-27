@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Target, Loader2, BarChart3, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Target, Loader2, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useAddGoalProgress } from '@/hooks/api/use-goals';

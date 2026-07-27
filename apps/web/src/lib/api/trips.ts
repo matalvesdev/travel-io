@@ -2,13 +2,15 @@ import { apiClient, type ApiResponse } from './client';
 
 export interface Trip {
   id: string;
+  name?: string;
   destination: string;
-  start_date: string;
-  end_date: string;
-  status: 'planned' | 'ongoing' | 'completed' | 'cancelled';
-  budget: number;
-  spent: number;
+  startDate: string;
+  endDate: string;
+  totalCost: number;
   notes?: string;
+  status: 'planned' | 'ongoing' | 'completed' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TripsResponse {

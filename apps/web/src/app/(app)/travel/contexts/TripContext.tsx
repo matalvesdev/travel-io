@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Plane, Hotel, Coffee, Map, Navigation } from 'lucide-react';
 import { CITY_TO_AIRPORT } from '@/lib/data/cities';
-import { tripsApi, milesApi, apiClient, referenceDataApi } from '@/lib/api';
+import { tripsApi, milesApi, referenceDataApi } from '@/lib/api';
 import type { TravelReferenceData } from '@/lib/api';
 
 export type Step = 'plan' | 'flights' | 'hotels' | 'confirm' | 'itinerary' | 'miles' | 'saved';
@@ -99,9 +99,9 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
       if (res.success && res.data?.trips) {
         setSavedTrips(res.data.trips.map((t: any) => ({
           id: t.id, origin: '—', destination: t.destination,
-          startDate: t.start_date, endDate: t.end_date,
-          flight: null, hotel: null, totalCost: t.budget || 0, nights: 0,
-          savedAt: t.created_at || new Date().toISOString(),
+          startDate: t.startDate, endDate: t.endDate,
+          flight: null, hotel: null, totalCost: t.totalCost || 0, nights: 0,
+          savedAt: t.createdAt || new Date().toISOString(),
           status: (t.status === 'planned' ? 'planejada' : t.status === 'ongoing' ? 'em andamento' : t.status === 'completed' ? 'concluída' : 'planejada') as SavedTrip['status'],
         })));
       }
@@ -164,7 +164,7 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
   const handleSaveTrip = async () => {
     const trip: SavedTrip = { id: `trip-${Date.now()}`, origin, destination, startDate, endDate, flight: selectedFlight, hotel: selectedHotel, totalCost, nights, savedAt: new Date().toISOString(), status: 'planejada' };
     try {
-      await tripsApi.createTrip({ destination, start_date: startDate, end_date: endDate, budget: totalCost, status: 'planned' });
+      await tripsApi.createTrip({ destination, startDate, endDate, totalCost, status: 'planned' });
       const updated = [...savedTrips, trip]; setSavedTrips(updated); setStep('saved');
       showToast('Viagem salva com sucesso!');
     } catch { showToast('Erro ao salvar viagem', 'error'); }

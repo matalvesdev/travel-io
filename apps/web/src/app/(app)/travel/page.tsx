@@ -2,9 +2,8 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, MapPin, Calendar, DollarSign, Plus, Search, Clock, CheckCircle2, TrendingUp } from 'lucide-react';
-import { useTrips, useFlightSearchTrigger, useHotelSearchTrigger } from '@/hooks/api/use-travel';
-import { useCreateTrip } from '@/hooks/api/use-travel';
+import { Plane, MapPin, Calendar, DollarSign, Plus, Clock, CheckCircle2, TrendingUp } from 'lucide-react';
+import { useTrips } from '@/hooks/api/use-travel';
 import { MetricCard } from '@/components/analytics/metric-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

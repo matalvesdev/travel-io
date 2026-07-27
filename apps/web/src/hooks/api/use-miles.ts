@@ -60,3 +60,22 @@ export function useTransferHistory() {
     select: (data) => data.data,
   });
 }
+
+export function useTransferRoutes() {
+  return useQuery({
+    queryKey: ['milesTransferRoutes'],
+    queryFn: () => milesApi.getTransferRoutes(),
+    select: (data) => data.data,
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => milesApi.deleteAccount(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milesBalance'] });
+    },
+  });
+}

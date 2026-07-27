@@ -26,10 +26,16 @@ export async function GET(request: NextRequest) {
 
     if (milesResult.error) return Response.json({ success: false, message: milesResult.error.message }, { status: 500 });
 
+    const programs = milesResult.data || [];
+    const totalMiles = programs.reduce((sum: number, p: any) => sum + Number(p.balance), 0);
+    const totalExpiring = programs.reduce((sum: number, p: any) => sum + Number(p.expiring_in_30_days || 0), 0);
+
     return Response.json({
       success: true,
       data: {
-        programs: milesResult.data,
+        totalMiles,
+        totalExpiring,
+        programs,
         transactions: transactionsResult.data || [],
       }});
   });
@@ -65,5 +71,23 @@ export async function PATCH(request: NextRequest) {
 
     if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
     return Response.json({ success: true, data });
+  });
+}
+
+export async function DELETE(request: NextRequest) {
+  return authenticatedHandler(request, async ({ userId, supabase }) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) return Response.json({ success: false, message: 'ID não informado' }, { status: 400 });
+
+    const { error } = await supabase
+      .from('miles')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) return Response.json({ success: false, message: error.message }, { status: 500 });
+    return Response.json({ success: true });
   });
 }

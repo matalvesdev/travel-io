@@ -1,13 +1,13 @@
-// Skyscanner API Client via RapidAPI
-// Docs: https://rapidapi.com/skyscanner/api/skyscanner
+// Skyscanner API Client — v3
+// Docs: https://developers.skyscanner.net
+// Get a key: https://www.partners.skyscanner.net/contact/general
 
-const SKYSCANNER_HOST = 'skyscanner-api.p.rapidapi.com';
+const SKYSCANNER_BASE = 'https://partners.api.skyscanner.net/apiservices/v3';
 const SKYSCANNER_KEY = process.env.SKYSCANNER_API_KEY;
 
 function getHeaders(): Record<string, string> {
   return {
-    'X-RapidAPI-Key': SKYSCANNER_KEY || '',
-    'X-RapidAPI-Host': SKYSCANNER_HOST,
+    'x-api-key': SKYSCANNER_KEY || '',
     'Content-Type': 'application/json',
   };
 }
@@ -40,7 +40,9 @@ export async function searchFlights(
   }
 
   try {
-    const res = await fetch(`https://${SKYSCANNER_HOST}/flights/live/search/create`, {
+    const [year, month, day] = date.split('-').map(Number);
+
+    const res = await fetch(`${SKYSCANNER_BASE}/flights/live/search/create`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({
@@ -52,7 +54,7 @@ export async function searchFlights(
             {
               originPlaceId: { iata: origin },
               destinationPlaceId: { iata: destination },
-              date: { year: parseInt(date.slice(0, 4)), month: parseInt(date.slice(5, 7)), day: parseInt(date.slice(8, 10)) },
+              date: { year, month, day },
             },
           ],
           adults,
@@ -67,26 +69,41 @@ export async function searchFlights(
     }
 
     const raw = await res.json();
-    const itineraries = raw?.data?.itineraries || {};
+    const content = raw?.content || raw?.data?.content || {};
+    const itineraries = content?.results?.itineraries || {};
+    const legs = content?.results?.legs || {};
+    const places = content?.results?.places || {};
 
     const flights: FlightResult[] = [];
     for (const [id, itinerary] of Object.entries<any>(itineraries)) {
-      const leg = itinerary.legs?.[0];
+      const legId = itinerary.legIds?.[0];
+      const leg = legs[legId];
       if (!leg) continue;
+
+      const originPlace = places[leg.originPlaceId];
+      const destPlace = places[leg.destinationPlaceId];
+      const pricingOption = itinerary.pricingOptions?.[0];
+      const price = pricingOption?.price;
 
       flights.push({
         id,
-        airline: leg.operatingCarriers?.[0] || leg.carriers?.marketing?.[0] || '',
+        airline: leg.marketingCarrierIds?.[0] || '',
         airlineLogo: '',
-        origin: leg.origin?.iata || origin,
-        destination: leg.destination?.iata || destination,
-        departureTime: leg.departure || '',
-        arrivalTime: leg.arrival || '',
-        duration: leg.durationInMinutes ? `${Math.floor(leg.durationInMinutes / 60)}h ${leg.durationInMinutes % 60}min` : '',
-        stops: leg.stops?.length || 0,
-        price: itinerary.price?.amount ? parseFloat(itinerary.price.amount) : 0,
-        currency: itinerary.price?.unit || 'BRL',
-        deepLink: itinerary.deepLink || '',
+        origin: originPlace?.iata || origin,
+        destination: destPlace?.iata || destination,
+        departureTime: leg.departureDateTime
+          ? `${String(leg.departureDateTime.hour).padStart(2, '0')}:${String(leg.departureDateTime.minute).padStart(2, '0')}`
+          : '',
+        arrivalTime: leg.arrivalDateTime
+          ? `${String(leg.arrivalDateTime.hour).padStart(2, '0')}:${String(leg.arrivalDateTime.minute).padStart(2, '0')}`
+          : '',
+        duration: leg.durationInMinutes
+          ? `${Math.floor(leg.durationInMinutes / 60)}h ${leg.durationInMinutes % 60}min`
+          : '',
+        stops: leg.stopCount || 0,
+        price: price?.amount ? parseFloat(price.amount) : 0,
+        currency: price?.unit || 'BRL',
+        deepLink: pricingOption?.items?.[0]?.deepLink || '',
       });
     }
 
@@ -124,7 +141,7 @@ export async function searchHotels(
   }
 
   try {
-    const res = await fetch(`https://${SKYSCANNER_HOST}/hotels/live/search/create`, {
+    const res = await fetch(`${SKYSCANNER_BASE}/hotels/live/search/create`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({
@@ -147,9 +164,10 @@ export async function searchHotels(
     }
 
     const raw = await res.json();
-    const hotels = raw?.data?.results?.hotels || [];
+    const content = raw?.content || raw?.data?.content || {};
+    const hotelsData = content?.results?.hotels || [];
 
-    return hotels.map((hotel: any) => ({
+    return hotelsData.map((hotel: any) => ({
       id: hotel.id || '',
       name: hotel.name || '',
       starRating: hotel.starRating || 0,
@@ -187,14 +205,18 @@ export async function searchLocations(query: string): Promise<LocationSuggestion
   if (!query || query.length < 2) return [];
 
   try {
-    const res = await fetch(
-      `https://${SKYSCANNER_HOST}/autosuggest-flights/v1.0/BR/BRL/pt-BR/${encodeURIComponent(query)}`,
-      {
-        method: 'GET',
-        headers: getHeaders(),
-        signal: AbortSignal.timeout(10000),
-      }
-    );
+    const res = await fetch(`${SKYSCANNER_BASE}/autosuggest/flights`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        query: {
+          market: 'BR',
+          locale: 'pt-BR',
+          searchTerm: query,
+        },
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
 
     if (!res.ok) {
       console.error(`Skyscanner location search error: HTTP ${res.status}`);
@@ -205,10 +227,10 @@ export async function searchLocations(query: string): Promise<LocationSuggestion
     const places = raw?.places || [];
 
     return places.map((place: any) => ({
-      id: place.placeId || '',
-      name: place.placeName || '',
-      type: place.placeType || '',
-      iata: place.iata || '',
+      id: place.entityId || '',
+      name: place.name || '',
+      type: place.type || '',
+      iata: place.iataCode || '',
       city: place.cityName || '',
       country: place.countryName || '',
     }));

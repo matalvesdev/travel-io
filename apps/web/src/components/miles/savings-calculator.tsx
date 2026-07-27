@@ -5,7 +5,7 @@ import { Calculator, Plane, Hotel, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { searchFlights } from '@/lib/api/skyscanner';
+import { milesApi } from '@/lib/api';
 
 interface SavingsCalculatorProps {
   totalMiles: number;
@@ -49,7 +49,8 @@ export function SavingsCalculator({ totalMiles, conversionRate = 0.04 }: Savings
     setResult(null);
 
     try {
-      const flights = await searchFlights(origin, destination, date, travelers);
+      const res = await milesApi.searchSkyscannerFlights({ origin, destination, date, adults: travelers });
+      const flights = res.data?.flights || [];
       const cashPrice = flights.length > 0 ? flights[0].price : Math.random() * 2000 + 500;
       const milesNeeded = Math.ceil((cashPrice / conversionRate) / 1000) * 1000;
       const milesValue = milesNeeded * conversionRate;
