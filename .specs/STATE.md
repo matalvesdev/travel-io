@@ -35,9 +35,9 @@
 **Branch**: main
 
 **Feature**: bookings-module
-**Phase**: Execute (Complete — pending migration)
-**Completed**: All 12 tasks (T1-T12), build passes, 48 unit tests pass
+**Phase**: Execute (Complete)
+**Completed**: All 12 tasks (T1-T12), build passes, 48 unit tests pass, migration applied
 **In Progress**: None
-**Next Step**: Prisma migration (apply schema to Supabase)
-**Blockers**: DATABASE_URL do Supabase não configurada localmente
-**Branch**: main/develop
+**Next Step**: Feature complete
+**Blockers**: None
+**Branch**: develop
