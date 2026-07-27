@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { Bell, Shield, Palette, Loader2, Check, X, LogOut, AlertTriangle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -175,7 +176,7 @@ export default function SettingsPage() {
               </div>
               {profile?.avatarUrl && (
                 <div className="flex items-center gap-3">
-                  <img src={profile.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full" />
+                  <Image src={profile.avatarUrl} alt="Avatar" width={48} height={48} className="h-12 w-12 rounded-full" />
                   <span className="text-sm text-muted-foreground">Avatar via OAuth</span>
                 </div>
               )}
