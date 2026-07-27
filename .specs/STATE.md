@@ -24,7 +24,6 @@
 **In Progress**: None
 **Next Step**: Feature complete - ready for review
 **Blockers**: None
-**Uncommitted files**: .specs/features/dashboard-redesign/*, .specs/STATE.md, new component files
 **Branch**: main
 
 **Feature**: shopping-full-rewrite
@@ -33,34 +32,12 @@
 **In Progress**: None
 **Next Step**: Feature complete - ready for review
 **Blockers**: None
-**Uncommitted files**: 30+ files modified/created
 **Branch**: main
 
-### Shopping Module Rewrite Summary
-
-**What was done:**
-- Unified Node.js scraper with hybrid approach (Playwright + fetch)
-- Migrated deals/coupons from Supabase to Prisma
-- Created unified types in types/shopping.ts
-- Redesigned all UI components with FAANG-quality UX
-- Added background price monitoring cron job
-- Added scraper health monitoring
-- Created CI/CD pipeline
-- Added unit tests for reliability calculation
-- Removed dead code (product-card.tsx, price-comparison.tsx, shopping-supabase.ts)
-
-**Key files created/modified:**
-- `prisma/schema.prisma` - Added missing columns
-- `src/types/shopping.ts` - Single source of truth
-- `src/lib/shopping/stores.ts` - Store definitions
-- `src/lib/shopping/reliability.ts` - Reliability calculation
-- `src/lib/api/scraper.ts` - Unified scraper
-- `src/lib/api/shopping.ts` - Unified API client
-- `src/app/api/products/route.ts` - Uses unified scraper
-- `src/app/api/shopping/*/route.ts` - All CRUD routes updated
-- `src/app/api/cron/price-check/route.ts` - Background monitoring
-- `src/app/api/health/scraper/route.ts` - Health checks
-- `src/app/(app)/shopping/page.tsx` - FAANG-quality redesign
-- `src/components/shopping/*.tsx` - All components rewritten
-- `src/hooks/api/use-shopping.ts` - Unified hooks
-- `.github/workflows/ci.yml` - CI/CD pipeline
+**Feature**: bookings-module
+**Phase**: Execute (Complete — pending migration)
+**Completed**: All 12 tasks (T1-T12), build passes, 48 unit tests pass
+**In Progress**: None
+**Next Step**: Prisma migration (apply schema to Supabase)
+**Blockers**: DATABASE_URL do Supabase não configurada localmente
+**Branch**: main/develop
