@@ -117,7 +117,6 @@ describe('POST /api/user/change-email', () => {
       where: { id: 'test-user-id' },
       data: {
         email: 'new@example.com',
-        emailVerified: false,
       },
     });
 
