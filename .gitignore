@@ -57,3 +57,7 @@ yarn-error.log*
 .claude/
 
 
+
+# Database files
+*.db
+.mycli.db
