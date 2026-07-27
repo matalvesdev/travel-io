@@ -1,6 +1,7 @@
 -- Add fields to profiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS account_status TEXT DEFAULT 'active';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false;
 
 -- Add budget to trips
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS budget DECIMAL(12, 2);
