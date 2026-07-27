@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+
 import {
   TrendingUp, TrendingDown,
   Loader2, RefreshCw, Wallet, Target, Plane, Award,
@@ -52,17 +52,9 @@ export default function DashboardPage() {
   const transactions = data?.transactions || [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
-    >
+    <div className="animate-fade-in space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
+      <div className="animate-fade-in-up flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Visão geral das suas finanças</p>
@@ -93,7 +85,7 @@ export default function DashboardPage() {
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Hero Section */}
       <StatsHero
@@ -115,11 +107,9 @@ export default function DashboardPage() {
       {/* Transactions + Goals */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Transactions List */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-2"
+        <div
+          style={{ animationDelay: '0.4s' }}
+          className="animate-fade-in-up lg:col-span-2"
         >
           <Card className="border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -137,13 +127,10 @@ export default function DashboardPage() {
               ) : (
                 <div className="space-y-2">
                   {transactions.slice(0, 6).map((t: { id: string; description: string; amount: number; type: string; date: string }, i: number) => (
-                    <motion.div
+                    <div
                       key={t.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + i * 0.05 }}
-                      whileHover={{ x: 4, backgroundColor: 'hsl(var(--muted) / 0.3)' }}
-                      className="flex items-center justify-between rounded-xl p-3 cursor-pointer transition-colors"
+                      style={{ animationDelay: `${0.5 + i * 0.05}s` }}
+                      className="animate-fade-in-up flex items-center justify-between rounded-xl p-3 cursor-pointer transition-all hover:translate-x-1 hover:bg-muted/30"
                     >
                       <div className="flex items-center gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
@@ -168,20 +155,18 @@ export default function DashboardPage() {
                       }`}>
                         {t.amount > 0 ? '+' : ''}{formatCurrency(t.amount)}
                       </span>
-                    </motion.div>
+      </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Goals & Trips Summary */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="space-y-4"
+        <div
+          style={{ animationDelay: '0.5s' }}
+          className="animate-fade-in-up space-y-4"
         >
           {/* Goals Card */}
           <Card className="border-border/50">
@@ -201,11 +186,9 @@ export default function DashboardPage() {
                     <span className="font-semibold">{goalsData.completed}/{goalsData.total}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${goalsData.total > 0 ? (goalsData.completed / goalsData.total) * 100 : 0}%` }}
-                      transition={{ duration: 1, ease: 'easeOut' }}
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70"
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all"
+                      style={{ width: `${goalsData.total > 0 ? (goalsData.completed / goalsData.total) * 100 : 0}%` }}
                     />
                   </div>
                   <p className="text-xs text-right text-muted-foreground">
@@ -288,17 +271,16 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Financial News */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
+      <div
+        style={{ animationDelay: '0.6s' }}
+        className="animate-fade-in-up"
       >
         <NewsSection />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

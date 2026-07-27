@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+
 import {
   TrendingUp, TrendingDown, Loader2, X, Upload,
   Search, Wallet, ChevronLeft, ChevronRight, Filter, Plus, Check,
@@ -282,7 +282,7 @@ export default function FinancePage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -428,8 +428,8 @@ export default function FinancePage() {
                   const method = inferMethod(t.description || '');
                   const company = getCompanyInfo(t.description || '');
                   return (
-                    <motion.tr key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.015 }}
-                      className={`border-b border-border/30 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-primary/5' : i % 2 === 0 ? 'bg-muted/10' : ''}`}>
+                    <tr key={t.id} style={{ animationDelay: `${i * 0.015}s` }}
+                      className={`animate-fade-in border-b border-border/30 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-primary/5' : i % 2 === 0 ? 'bg-muted/10' : ''}`}>
                       <td className="p-4"><input type="checkbox" className="rounded border-border" checked={isSelected} onChange={() => toggleSelect(tid)} /></td>
                       <td className="p-4">
                         {isEditing ? (
@@ -505,7 +505,7 @@ export default function FinancePage() {
                           )}
                         </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   );
                 })
               )}
@@ -574,6 +574,6 @@ export default function FinancePage() {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

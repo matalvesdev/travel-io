@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+
 import { TrendingUp, TrendingDown, Wallet, Target, Loader2 } from 'lucide-react';
 import { MetricCard } from '@/components/analytics/metric-card';
 
@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -111,12 +111,10 @@ export default function AnalyticsPage() {
           <div className="p-6">
             <div className="grid gap-4 md:grid-cols-3">
               {summary.insights.map((insight, i) => (
-                <motion.div
+                <div
                   key={insight.id || i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`rounded-lg border p-4 ${
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                  className={`animate-fade-in-up-20 rounded-lg border p-4 ${
                     insight.priority === 'HIGH'
                       ? 'border-destructive/50 bg-destructive/5'
                       : insight.priority === 'MEDIUM'
@@ -126,12 +124,12 @@ export default function AnalyticsPage() {
                 >
                   <p className="font-medium">{insight.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{insight.description}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

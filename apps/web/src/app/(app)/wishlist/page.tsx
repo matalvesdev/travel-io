@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+
 import { Heart } from 'lucide-react';
 import { WishlistGrid } from '@/components/wishlist/wishlist-grid';
 import { WishlistForm } from '@/components/wishlist/wishlist-form';
@@ -58,7 +58,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="animate-fade-in-up space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Wishlist</h1>
@@ -89,6 +89,6 @@ export default function WishlistPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-    </motion.div>
+    </div>
   );
 }
